@@ -217,7 +217,7 @@ Always record:
 | Field | Example |
 |-------|---------|
 | App URL | `https://staging...` / `localhost:3000` |
-| API URL | `http://localhost:4000/api/v1` |
+| API URL | `http://localhost:4001/api/v1` |
 | Build / Git SHA | `abc1234` |
 | Role | Customer / Agent / Admin / Guest |
 | Browser + version | Chrome 127 |

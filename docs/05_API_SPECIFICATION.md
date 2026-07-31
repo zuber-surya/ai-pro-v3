@@ -27,7 +27,7 @@ MVP uses **real OpenAPI contracts** as the single API SOT. Temporary frontend mo
 
 | Environment | URL |
 |-------------|-----|
-| Local | `http://localhost:4000/api/v1` |
+| Local | `http://localhost:4001/api/v1` |
 | Staging | `https://staging-api.propvista.example/api/v1` |
 | Production | `https://api.propvista.example/api/v1` |
 

@@ -62,7 +62,7 @@ Operational guide to deploy Property AI Studio / PropVista CRM across Local, Sta
 | `JWT_ACCESS_SECRET` | Yes | Access token signing |
 | `JWT_REFRESH_SECRET` | Yes | Refresh token signing |
 | `GEMINI_API_KEY` | Yes | Server-only |
-| `PORT` | Yes | e.g. 4000 |
+| `PORT` | Yes | e.g. 4001 |
 | `CORS_ORIGIN` | Yes | FE origin(s) |
 | `EMAIL_*` | Yes (staging/prod) | Provider-specific |
 | `STORAGE_ROOT` | Dev | Local media path |

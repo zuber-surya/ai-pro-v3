@@ -28,14 +28,14 @@ npm install
 npx prisma migrate deploy
 npx prisma generate
 npm run dev
-# → http://localhost:4000/api/v1/health
+# → http://localhost:4001/api/v1/health
 
 # Frontend (new terminal)
 cd frontend
 cp .env.example .env.local
 npm install
 npm run dev
-# → http://localhost:3000
+# → http://localhost:3001
 ```
 
 From repo root:

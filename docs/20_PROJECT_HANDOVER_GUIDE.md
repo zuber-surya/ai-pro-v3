@@ -223,7 +223,7 @@ backend/src/
 | `JWT_REFRESH_SECRET` | backend | Yes | Refresh tokens |
 | `GEMINI_API_KEY` | backend | Yes | AI provider |
 | `EMAIL_*` | backend | Yes | Transactional email |
-| `PORT` | backend | No | API port (e.g. 4000) |
+| `PORT` | backend | No | API port (e.g. 4001) |
 | `CORS_ORIGIN` | backend | No | FE origin(s) |
 | `NEXT_PUBLIC_API_BASE_URL` | frontend | No | API base (`…/api/v1`) |
 | Storage paths | backend | No | Local media root (dev) |
@@ -269,8 +269,8 @@ Default local URLs (confirm in README when published):
 
 | App | URL |
 |-----|-----|
-| Frontend | `http://localhost:3000` |
-| API | `http://localhost:4000/api/v1` |
+| Frontend | `http://localhost:3001` |
+| API | `http://localhost:4001/api/v1` |
 | Health | `GET /api/v1/health` |
 
 ### 7.3 Dev rules

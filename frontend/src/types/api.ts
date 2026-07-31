@@ -18,6 +18,13 @@ export type HealthResponse = {
   version?: string;
 };
 
+export type TokenResponse = {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: "Bearer";
+  expiresIn: number;
+};
+
 /** Thrown by lib/api client when HTTP or envelope indicates failure */
 export class AppError extends Error {
   constructor(

@@ -6,7 +6,7 @@ info:
     AI. Roles: customer, agent, admin, super_admin. Guest = no auth. Errors: {error:{code,message,details[]}}.
     Pagination meta. Prices as strings. Notification channels: email, in_app.'
 servers:
-- url: http://localhost:4000/api/v1
+- url: http://localhost:4001/api/v1
   description: Local development
 - url: https://staging-api.propvista.example/api/v1
   description: Staging

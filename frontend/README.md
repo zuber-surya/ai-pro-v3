@@ -10,8 +10,8 @@ npm install
 npm run dev
 ```
 
-App: http://localhost:3000  
-API base: `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:4000/api/v1`)
+App: http://localhost:3001  
+API base: `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:4001/api/v1`)
 
 ## Scripts
 
