@@ -89,6 +89,7 @@ Primary FR linkage is summarized per tag. Exact FEAT→FR map: `08_EPICS_AND_FEA
 | GET | `/properties/{id}` | Get property |
 | PATCH | `/properties/{id}` | Update property |
 | DELETE | `/properties/{id}` | Delete property |
+| POST | `/properties/{id}/archive` | Archive property |
 | POST | `/properties/{id}/duplicate` | Duplicate property |
 | GET | `/properties/{id}/similar` | Similar properties |
 | PATCH | `/properties/{id}/status` | Update property status |

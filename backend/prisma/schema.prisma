@@ -62,8 +62,55 @@ model Agent {
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  properties Property[]
 
   @@index([email], map: "ix_agents_email")
   @@index([isActive], map: "ix_agents_is_active")
   @@map("agents")
+}
+
+enum PropertyStatus {
+  draft
+  published
+  archived
+  sold
+  rented
+}
+
+model Property {
+  id            String         @id @default(uuid()) @db.Uuid
+  title         String         @db.VarChar(300)
+  description   String?
+  status        PropertyStatus @default(draft)
+  price         Decimal        @db.Decimal(14, 2)
+  currency      String         @default("INR") @db.Char(3)
+  propertyType  String         @map("property_type") @db.VarChar(80)
+  bedrooms      Int            @default(0) @map("beds")
+  bathrooms     Decimal        @default(0) @map("baths") @db.Decimal(4, 1)
+  areaSqFt      Decimal        @default(0) @map("sqft") @db.Decimal(12, 2)
+  addressLine   String         @map("address_line") @db.VarChar(500)
+  city          String?        @db.VarChar(120)
+  region        String?        @db.VarChar(120)
+  postalCode    String?        @map("postal_code") @db.VarChar(32)
+  country       String?        @db.VarChar(120)
+  yearBuilt     Int?           @map("year_built")
+  featured      Boolean        @default(false)
+  agentId       String?        @map("agent_id") @db.Uuid
+  lat           Float?
+  lng           Float?
+  viewsCount    Int            @default(0) @map("views_count")
+  savesCount    Int            @default(0) @map("saves_count")
+  publishedAt   DateTime?      @map("published_at")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  agent Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  @@index([status], map: "ix_properties_status")
+  @@index([price], map: "ix_properties_price")
+  @@index([city], map: "ix_properties_city")
+  @@index([propertyType], map: "ix_properties_type")
+  @@index([agentId], map: "ix_properties_agent_id")
+  @@index([publishedAt], map: "ix_properties_published_at")
+  @@map("properties")
 }

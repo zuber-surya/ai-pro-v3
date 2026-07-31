@@ -13,6 +13,9 @@ export default function AdminPlaceholderPage() {
       <Link href="/admin/agents" className="text-primary hover:underline">
         Manage agents
       </Link>
+      <Link href="/properties" className="text-primary hover:underline">
+        Property inventory
+      </Link>
     </main>
   );
 }

@@ -1080,6 +1080,25 @@ paths:
         in: query
         schema:
           type: string
+      - name: sortBy
+        in: query
+        schema:
+          type: string
+          enum:
+          - createdAt
+          - price
+          - title
+          - status
+          - updatedAt
+          default: createdAt
+      - name: sortOrder
+        in: query
+        schema:
+          type: string
+          enum:
+          - asc
+          - desc
+          default: desc
     post:
       tags:
       - Properties
@@ -1238,6 +1257,21 @@ paths:
           enum:
           - csv
           - json
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/PropertyStatus'
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 5000
+          default: 1000
   /properties/bulk/status:
     post:
       tags:

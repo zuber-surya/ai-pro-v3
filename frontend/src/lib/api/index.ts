@@ -13,3 +13,20 @@ export {
   agentImageSrc,
 } from "./agents";
 export type { Agent, PaginatedAgents, AgentCreatePayload, AgentUpdatePayload } from "./agents";
+export {
+  listProperties,
+  createProperty,
+  updatePropertyStatus,
+  archiveProperty,
+  duplicateProperty,
+  deleteProperty,
+  bulkUpdatePropertyStatus,
+  exportPropertiesCsv,
+} from "./properties";
+export type {
+  Property,
+  PropertyStatus,
+  PaginatedProperties,
+  ListPropertiesParams,
+  PropertyCreatePayload,
+} from "./properties";
