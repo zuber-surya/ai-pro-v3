@@ -11,6 +11,7 @@ const envSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(16),
   JWT_REFRESH_SECRET: z.string().min(16),
   GEMINI_API_KEY: z.string().optional(),
+  STORAGE_ROOT: z.string().min(1).default("./storage"),
 });
 
 const parsed = envSchema.safeParse(process.env);

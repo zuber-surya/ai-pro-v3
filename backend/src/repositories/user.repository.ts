@@ -7,6 +7,7 @@ export type PublicUser = {
   fullName: string | null;
   phone: string | null;
   role: Role;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -18,6 +19,7 @@ export function toPublicUser(user: User): PublicUser {
     fullName: user.fullName,
     phone: user.phone,
     role: user.role,
+    isActive: user.isActive,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
   };
@@ -50,6 +52,60 @@ export const userRepository = {
         phone: data.phone,
         role: "customer",
       },
+    });
+  },
+
+  create(data: {
+    email: string;
+    passwordHash: string;
+    role: Role;
+    fullName?: string;
+    phone?: string;
+  }) {
+    return prisma.user.create({
+      data: {
+        email: data.email.toLowerCase(),
+        passwordHash: data.passwordHash,
+        role: data.role,
+        fullName: data.fullName,
+        phone: data.phone,
+      },
+    });
+  },
+
+  async list(params: { page: number; pageSize: number }) {
+    const where = { deletedAt: null };
+    const [total, rows] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (params.page - 1) * params.pageSize,
+        take: params.pageSize,
+      }),
+    ]);
+    return { total, rows };
+  },
+
+  update(
+    id: string,
+    data: {
+      fullName?: string | null;
+      phone?: string | null;
+      role?: Role;
+      isActive?: boolean;
+    },
+  ) {
+    return prisma.user.update({
+      where: { id },
+      data,
+    });
+  },
+
+  softDelete(id: string) {
+    return prisma.user.update({
+      where: { id },
+      data: { deletedAt: new Date(), isActive: false },
     });
   },
 };

@@ -75,6 +75,7 @@ Primary FR linkage is summarized per tag. Exact FEAT→FR map: `08_EPICS_AND_FEA
 | GET | `/agents/{id}` | Get agent |
 | PATCH | `/agents/{id}` | Update agent |
 | DELETE | `/agents/{id}` | Delete agent |
+| POST | `/agents/{id}/image` | Upload agent profile image |
 
 ### Properties
 

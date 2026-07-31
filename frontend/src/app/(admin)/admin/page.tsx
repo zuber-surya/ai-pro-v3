@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function AdminPlaceholderPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-md px-md py-xl">
@@ -5,6 +7,12 @@ export default function AdminPlaceholderPage() {
       <p className="text-body-md text-on-surface-variant">
         Admin shell (command center comes later). Role guard active.
       </p>
+      <Link href="/admin/users" className="text-primary hover:underline">
+        Manage users
+      </Link>
+      <Link href="/admin/agents" className="text-primary hover:underline">
+        Manage agents
+      </Link>
     </main>
   );
 }

@@ -959,6 +959,67 @@ paths:
           type: string
           format: uuid
         description: Resource identifier
+  /agents/{id}/image:
+    post:
+      tags:
+      - Agents
+      summary: Upload agent profile image
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin. Local disk storage in development.'
+      operationId: postAgentImage
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Invalid type or size
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /properties:
     get:
       tags:
@@ -5085,6 +5146,7 @@ components:
       - id
       - email
       - role
+      - isActive
       - createdAt
       properties:
         id:
@@ -5099,6 +5161,8 @@ components:
           type: string
         role:
           $ref: '#/components/schemas/UserRole'
+        isActive:
+          type: boolean
         createdAt:
           type: string
           format: date-time
@@ -5134,12 +5198,16 @@ components:
           type: string
         role:
           $ref: '#/components/schemas/UserRole'
+        isActive:
+          type: boolean
+          description: Deactivate or reactivate without soft-deleting
     Agent:
       type: object
       required:
       - id
-      - userId
-      - licenseNumber
+      - name
+      - email
+      - isActive
       - createdAt
       properties:
         id:
@@ -5148,14 +5216,16 @@ components:
         userId:
           type: string
           format: uuid
-        licenseNumber:
+          nullable: true
+        name:
           type: string
-        bio:
+        email:
           type: string
-        specializations:
-          type: array
-          items:
-            type: string
+          format: email
+        phone:
+          type: string
+        profileImageUrl:
+          type: string
         isActive:
           type: boolean
         createdAt:
@@ -5167,31 +5237,33 @@ components:
     AgentCreate:
       type: object
       required:
-      - userId
-      - licenseNumber
+      - name
+      - email
       properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
         userId:
           type: string
           format: uuid
-        licenseNumber:
-          type: string
-        bio:
-          type: string
-        specializations:
-          type: array
-          items:
-            type: string
     AgentUpdate:
       type: object
       properties:
-        licenseNumber:
+        name:
           type: string
-        bio:
+        email:
           type: string
-        specializations:
-          type: array
-          items:
-            type: string
+          format: email
+        phone:
+          type: string
+        userId:
+          type: string
+          format: uuid
+          nullable: true
         isActive:
           type: boolean
     Property:

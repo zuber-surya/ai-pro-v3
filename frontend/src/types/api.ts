@@ -33,6 +33,7 @@ export type UserPublic = {
   fullName?: string | null;
   phone?: string | null;
   role: UserRole;
+  isActive: boolean;
   createdAt: string;
   updatedAt?: string;
 };

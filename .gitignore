@@ -6,7 +6,9 @@ out/
 .env.local
 .env.*.local
 *.log
-storage/
+/storage/
+/backend/storage/
+/backend/storage-test/
 coverage/
 .DS_Store
 *.tsbuildinfo

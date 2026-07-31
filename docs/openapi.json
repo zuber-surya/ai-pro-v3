@@ -8363,6 +8363,7 @@
           "id",
           "email",
           "role",
+          "isActive",
           "createdAt"
         ],
         "properties": {
@@ -8382,6 +8383,9 @@
           },
           "role": {
             "$ref": "#/components/schemas/UserRole"
+          },
+          "isActive": {
+            "type": "boolean"
           },
           "createdAt": {
             "type": "string",
@@ -8432,6 +8436,10 @@
           },
           "role": {
             "$ref": "#/components/schemas/UserRole"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Deactivate or reactivate without soft-deleting"
           }
         }
       },
@@ -8439,8 +8447,9 @@
         "type": "object",
         "required": [
           "id",
-          "userId",
-          "licenseNumber",
+          "name",
+          "email",
+          "isActive",
           "createdAt"
         ],
         "properties": {
@@ -8450,19 +8459,21 @@
           },
           "userId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
-          "licenseNumber": {
+          "name": {
             "type": "string"
           },
-          "bio": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
             "type": "string"
           },
-          "specializations": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "profileImageUrl": {
+            "type": "string"
           },
           "isActive": {
             "type": "boolean"
@@ -8480,42 +8491,43 @@
       "AgentCreate": {
         "type": "object",
         "required": [
-          "userId",
-          "licenseNumber"
+          "name",
+          "email"
         ],
         "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string"
+          },
           "userId": {
             "type": "string",
             "format": "uuid"
-          },
-          "licenseNumber": {
-            "type": "string"
-          },
-          "bio": {
-            "type": "string"
-          },
-          "specializations": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         }
       },
       "AgentUpdate": {
         "type": "object",
         "properties": {
-          "licenseNumber": {
+          "name": {
             "type": "string"
           },
-          "bio": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
             "type": "string"
           },
-          "specializations": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           },
           "isActive": {
             "type": "boolean"
