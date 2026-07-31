@@ -5,6 +5,23 @@ import { AppError, type ApiErrorEnvelope } from "@/types/api";
 
 export type PropertyStatus = "draft" | "published" | "archived" | "sold" | "rented";
 
+export type PropertyAgent = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  profileImageUrl: string | null;
+  isActive: boolean;
+};
+
+export type PropertyImage = {
+  id: string;
+  url: string;
+  kind: "photo" | "floorplan";
+  caption: string | null;
+  sortOrder: number;
+};
+
 export type Property = {
   id: string;
   title: string;
@@ -26,9 +43,15 @@ export type Property = {
   amenities: string[];
   featured: boolean;
   agentId: string | null;
+  coverImageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
+};
+
+export type PropertyDetail = Property & {
+  images: PropertyImage[];
+  agent: PropertyAgent | null;
 };
 
 export type PaginatedProperties = {
@@ -93,7 +116,23 @@ export function listProperties(params?: ListPropertiesParams) {
 }
 
 export function getProperty(id: string) {
-  return apiRequest<Property>(`/properties/${id}`);
+  return apiRequest<PropertyDetail>(`/properties/${id}`);
+}
+
+export function getSimilarProperties(
+  id: string,
+  params?: { page?: number; pageSize?: number },
+) {
+  return apiRequest<PaginatedProperties>(
+    `/properties/${id}/similar${toQuery(params)}`,
+  );
+}
+
+export function propertyMediaSrc(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  const base = publicEnv.apiBaseUrl.replace(/\/api\/v1\/?$/, "");
+  return `${base}${url}`;
 }
 
 export function createProperty(payload: PropertyCreatePayload) {
@@ -161,14 +200,6 @@ export async function exportPropertiesCsv(params?: ListPropertiesParams): Promis
   }
   return res.blob();
 }
-
-export type PropertyImage = {
-  id: string;
-  url: string;
-  kind: "photo" | "floorplan";
-  caption: string | null;
-  sortOrder: number;
-};
 
 export function listPropertyImages(propertyId: string) {
   return apiRequest<PropertyImage[]>(`/properties/${propertyId}/images`);

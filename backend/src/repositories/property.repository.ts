@@ -1,10 +1,7 @@
-import type { Prisma, Property, PropertyAmenity, PropertyStatus } from "@prisma/client";
+import type { Agent, Prisma, Property, PropertyAmenity, PropertyImage, PropertyStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
-
-export type PublicAmenity = {
-  name: string;
-  isCustom: boolean;
-};
+import { toPublicAgent, type PublicAgent } from "./agent.repository.js";
+import { toPublicPropertyImage, type PublicPropertyImage } from "./propertyImage.repository.js";
 
 export type PublicProperty = {
   id: string;
@@ -27,14 +24,28 @@ export type PublicProperty = {
   amenities: string[];
   featured: boolean;
   agentId: string | null;
+  coverImageUrl: string | null;
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
 };
 
-type PropertyWithAmenities = Property & { amenities?: PropertyAmenity[] };
+export type PropertyDetail = PublicProperty & {
+  images: PublicPropertyImage[];
+  agent: PublicAgent | null;
+};
+
+type PropertyWithAmenities = Property & {
+  amenities?: PropertyAmenity[];
+  images?: PropertyImage[];
+  agent?: Agent | null;
+};
 
 export function toPublicProperty(p: PropertyWithAmenities): PublicProperty {
+  const cover =
+    (p.images ?? []).find((img) => img.kind === "photo")?.url ??
+    (p.images ?? [])[0]?.url ??
+    null;
   return {
     id: p.id,
     title: p.title,
@@ -56,9 +67,18 @@ export function toPublicProperty(p: PropertyWithAmenities): PublicProperty {
     amenities: (p.amenities ?? []).map((a) => a.name),
     featured: p.featured,
     agentId: p.agentId,
+    coverImageUrl: cover,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
     publishedAt: p.publishedAt?.toISOString() ?? null,
+  };
+}
+
+export function toPropertyDetail(p: PropertyWithAmenities): PropertyDetail {
+  return {
+    ...toPublicProperty(p),
+    images: (p.images ?? []).map(toPublicPropertyImage),
+    agent: p.agent ? toPublicAgent(p.agent) : null,
   };
 }
 
@@ -94,7 +114,11 @@ export const propertyRepository = {
   findById(id: string) {
     return prisma.property.findUnique({
       where: { id },
-      include: { amenities: { orderBy: { name: "asc" } } },
+      include: {
+        amenities: { orderBy: { name: "asc" } },
+        agent: true,
+        images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+      },
     });
   },
 
@@ -108,7 +132,53 @@ export const propertyRepository = {
         orderBy,
         skip: (filter.page - 1) * filter.pageSize,
         take: filter.pageSize,
-        include: { amenities: { orderBy: { name: "asc" } } },
+        include: {
+          amenities: { orderBy: { name: "asc" } },
+          images: {
+            where: { kind: "photo" },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+            take: 1,
+          },
+        },
+      }),
+    ]);
+    return { total, rows };
+  },
+
+  async listSimilar(
+    property: Property,
+    page: number,
+    pageSize: number,
+  ) {
+    const or: Prisma.PropertyWhereInput[] = [];
+    if (property.city?.trim()) {
+      or.push({ city: { equals: property.city.trim(), mode: "insensitive" } });
+    }
+    if (property.propertyType?.trim()) {
+      or.push({
+        propertyType: { equals: property.propertyType.trim(), mode: "insensitive" },
+      });
+    }
+    const where: Prisma.PropertyWhereInput = {
+      id: { not: property.id },
+      status: "published",
+      ...(or.length ? { OR: or } : {}),
+    };
+    const [total, rows] = await Promise.all([
+      prisma.property.count({ where }),
+      prisma.property.findMany({
+        where,
+        orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          amenities: { orderBy: { name: "asc" } },
+          images: {
+            where: { kind: "photo" },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+            take: 1,
+          },
+        },
       }),
     ]);
     return { total, rows };
@@ -129,7 +199,11 @@ export const propertyRepository = {
   create(data: Prisma.PropertyCreateInput) {
     return prisma.property.create({
       data,
-      include: { amenities: true },
+      include: {
+        amenities: true,
+        agent: true,
+        images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+      },
     });
   },
 
@@ -137,7 +211,11 @@ export const propertyRepository = {
     return prisma.property.update({
       where: { id },
       data,
-      include: { amenities: { orderBy: { name: "asc" } } },
+      include: {
+        amenities: { orderBy: { name: "asc" } },
+        agent: true,
+        images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+      },
     });
   },
 

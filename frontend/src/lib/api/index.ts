@@ -16,6 +16,8 @@ export type { Agent, PaginatedAgents, AgentCreatePayload, AgentUpdatePayload } f
 export {
   listProperties,
   getProperty,
+  getSimilarProperties,
+  propertyMediaSrc,
   createProperty,
   updateProperty,
   replaceAmenities,
@@ -31,6 +33,8 @@ export {
 } from "./properties";
 export type {
   Property,
+  PropertyDetail,
+  PropertyAgent,
   PropertyStatus,
   PaginatedProperties,
   ListPropertiesParams,

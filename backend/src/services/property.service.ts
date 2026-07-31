@@ -4,6 +4,7 @@ import type { AuthUser } from "../middleware/requireAuth.middleware.js";
 import { agentRepository } from "../repositories/agent.repository.js";
 import {
   propertyRepository,
+  toPropertyDetail,
   toPublicProperty,
 } from "../repositories/property.repository.js";
 import type {
@@ -13,6 +14,7 @@ import type {
   ListPropertiesQuery,
   PropertyCreateInput,
   PropertyUpdateInput,
+  SimilarPropertiesQuery,
 } from "../validators/property.validators.js";
 import { STANDARD_AMENITIES } from "../validators/property.validators.js";
 
@@ -113,11 +115,39 @@ export const propertyService = {
       if (property.status !== "published") {
         throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
       }
-      return toPublicProperty(property);
+      return toPropertyDetail(property);
     }
 
     await assertCanAccessProperty(actor, property.agentId);
-    return toPublicProperty(property);
+    return toPropertyDetail(property);
+  },
+
+  async listSimilar(id: string, query: SimilarPropertiesQuery, actor?: AuthUser) {
+    const property = await propertyRepository.findById(id);
+    if (!property) throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
+
+    if (!actor || actor.role === "customer") {
+      if (property.status !== "published") {
+        throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
+      }
+    } else {
+      await assertCanAccessProperty(actor, property.agentId);
+    }
+
+    const { total, rows } = await propertyRepository.listSimilar(
+      property,
+      query.page,
+      query.pageSize,
+    );
+    return {
+      data: rows.map(toPublicProperty),
+      meta: {
+        page: query.page,
+        pageSize: query.pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
+      },
+    };
   },
 
   async create(input: PropertyCreateInput, actor: AuthUser) {

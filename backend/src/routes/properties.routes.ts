@@ -16,6 +16,7 @@ import {
   propertyCreateSchema,
   propertyStatusPatchSchema,
   propertyUpdateSchema,
+  similarPropertiesQuerySchema,
 } from "../validators/property.validators.js";
 import { propertyImageUploadMetaSchema } from "../validators/propertyImage.validators.js";
 
@@ -135,6 +136,22 @@ propertiesRouter.get(
   asyncHandler(async (req, res) => {
     const property = await propertyService.getById(req.params.id, req.authUser);
     res.status(200).json(property);
+  }),
+);
+
+propertiesRouter.get(
+  "/:id/similar",
+  (req, res, next) => {
+    if (req.headers.authorization) {
+      requireAuth(req, res, next);
+      return;
+    }
+    next();
+  },
+  asyncHandler(async (req, res) => {
+    const parsed = similarPropertiesQuerySchema.safeParse(req.query);
+    if (!parsed.success) throw zodToAppError(parsed.error);
+    res.status(200).json(await propertyService.listSimilar(req.params.id, parsed.data, req.authUser));
   }),
 );
 
