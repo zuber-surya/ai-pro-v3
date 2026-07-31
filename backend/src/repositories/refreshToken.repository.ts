@@ -37,4 +37,11 @@ export const refreshTokenRepository = {
       data: { revokedAt: new Date() },
     });
   },
+
+  revokeAllForUser(userId: string) {
+    return prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  },
 };

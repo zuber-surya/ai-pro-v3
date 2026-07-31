@@ -25,6 +25,18 @@ export type TokenResponse = {
   expiresIn: number;
 };
 
+export type UserRole = "customer" | "agent" | "admin" | "super_admin";
+
+export type UserPublic = {
+  id: string;
+  email: string;
+  fullName?: string | null;
+  phone?: string | null;
+  role: UserRole;
+  createdAt: string;
+  updatedAt?: string;
+};
+
 /** Thrown by lib/api client when HTTP or envelope indicates failure */
 export class AppError extends Error {
   constructor(

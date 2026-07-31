@@ -1,5 +1,5 @@
 import { apiRequest } from "./client";
-import type { TokenResponse } from "@/types/api";
+import type { TokenResponse, UserPublic } from "@/types/api";
 
 export type RegisterPayload = {
   email: string;
@@ -26,5 +26,25 @@ export function login(payload: LoginPayload) {
     method: "POST",
     body: payload,
     skipAuthRefresh: true,
+  });
+}
+
+export function refresh(refreshToken: string) {
+  return apiRequest<TokenResponse>("/auth/refresh", {
+    method: "POST",
+    body: { refreshToken },
+    skipAuthRefresh: true,
+  });
+}
+
+export function logout() {
+  return apiRequest<void>("/auth/logout", {
+    method: "POST",
+  });
+}
+
+export function getMe() {
+  return apiRequest<UserPublic>("/auth/me", {
+    method: "GET",
   });
 }

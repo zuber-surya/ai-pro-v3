@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, Input, Modal } from "@/components/ui";
 import { EmptyState, ErrorState, Loader, Skeleton } from "@/components/states";
+import { HomeAuthCtas } from "@/features/home";
 import { getHealth } from "@/lib/api";
 import { AppError } from "@/types/api";
 import { publicEnv } from "@/lib/config/env";
@@ -36,6 +37,10 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-container-max flex-col gap-xl px-md py-xl md:px-xl">
+      <nav className="flex items-center justify-between border-b border-outline-variant pb-md">
+        <p className="font-headline-md text-headline-md font-bold text-primary">PropVista CRM</p>
+        <HomeAuthCtas />
+      </nav>
       <header className="space-y-sm">
         <p className="font-label-md text-label-md text-ai-accent">PropVista CRM</p>
         <h1 className="font-display-lg text-display-lg text-on-surface">

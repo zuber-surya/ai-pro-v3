@@ -30,6 +30,12 @@ export const userRepository = {
     });
   },
 
+  findById(id: string) {
+    return prisma.user.findFirst({
+      where: { id, deletedAt: null },
+    });
+  },
+
   createCustomer(data: {
     email: string;
     passwordHash: string;

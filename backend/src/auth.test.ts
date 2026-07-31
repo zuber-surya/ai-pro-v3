@@ -67,3 +67,61 @@ describe("Auth register/login", () => {
     expect(res.body.error.code).toBe("VALIDATION_ERROR");
   });
 });
+
+describe("Auth refresh/logout/guards", () => {
+  const email = `qa.session.${Date.now()}@example.com`;
+  const password = "SecurePass1!";
+  let accessToken = "";
+  let refreshToken = "";
+
+  it("registers session user", async () => {
+    await cleanupEmail(email);
+    const res = await request(app).post("/api/v1/auth/register").send({
+      email,
+      password,
+      fullName: "Session User",
+    });
+    expect(res.status).toBe(201);
+    accessToken = res.body.accessToken;
+    refreshToken = res.body.refreshToken;
+  });
+
+  it("returns current user via /auth/me", async () => {
+    const res = await request(app)
+      .get("/api/v1/auth/me")
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.email).toBe(email);
+    expect(res.body.role).toBe("customer");
+  });
+
+  it("rejects /auth/me without token with 401", async () => {
+    const res = await request(app).get("/api/v1/auth/me");
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe("AUTH_INVALID_CREDENTIALS");
+  });
+
+  it("refreshes tokens and rotates refresh", async () => {
+    const res = await request(app).post("/api/v1/auth/refresh").send({ refreshToken });
+    expect(res.status).toBe(200);
+    expect(res.body.accessToken).toBeTruthy();
+    expect(res.body.refreshToken).toBeTruthy();
+    expect(res.body.refreshToken).not.toBe(refreshToken);
+
+    const reused = await request(app).post("/api/v1/auth/refresh").send({ refreshToken });
+    expect(reused.status).toBe(401);
+
+    accessToken = res.body.accessToken;
+    refreshToken = res.body.refreshToken;
+  });
+
+  it("logs out and invalidates refresh", async () => {
+    const res = await request(app)
+      .post("/api/v1/auth/logout")
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(204);
+
+    const refreshed = await request(app).post("/api/v1/auth/refresh").send({ refreshToken });
+    expect(refreshed.status).toBe(401);
+  });
+});

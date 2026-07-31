@@ -1,10 +1,14 @@
 /**
- * Auth shell placeholders — real JWT session in FEAT-01.
- * Refresh contract stub for api client 401 interceptor.
+ * Client auth session — tokens in sessionStorage; user via /auth/me.
  */
+
+import { refresh as refreshApi } from "@/lib/api/auth";
+import type { UserPublic, UserRole } from "@/types/api";
 
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
+let currentUser: UserPublic | null = null;
+let refreshInFlight: Promise<string | null> | null = null;
 
 export function setAuthTokens(tokens: { access: string | null; refresh?: string | null }): void {
   accessToken = tokens.access;
@@ -20,6 +24,7 @@ export function setAuthTokens(tokens: { access: string | null; refresh?: string 
 export function clearAuthTokens(): void {
   accessToken = null;
   refreshToken = null;
+  currentUser = null;
   if (typeof window !== "undefined") {
     sessionStorage.removeItem("pv_access");
     sessionStorage.removeItem("pv_refresh");
@@ -34,18 +39,67 @@ export function getAccessToken(): string | null {
   return accessToken;
 }
 
+export function getRefreshToken(): string | null {
+  if (refreshToken) return refreshToken;
+  if (typeof window !== "undefined") {
+    refreshToken = sessionStorage.getItem("pv_refresh");
+  }
+  return refreshToken;
+}
+
+export function getCurrentUser(): UserPublic | null {
+  return currentUser;
+}
+
+export function setCurrentUser(user: UserPublic | null): void {
+  currentUser = user;
+}
+
 export function hydrateAuthTokensFromStorage(): void {
   if (typeof window === "undefined") return;
   accessToken = sessionStorage.getItem("pv_access");
   refreshToken = sessionStorage.getItem("pv_refresh");
 }
 
-/**
- * Stub refresh — returns null until FEAT-01 implements POST /auth/refresh.
- * Client will surface original 401 AppError when refresh fails.
- */
-export async function refreshAccessTokenStub(): Promise<string | null> {
-  if (!refreshToken) return null;
-  // Future: apiRequest('/auth/refresh', { method: 'POST', body: { refreshToken }, skipAuthRefresh: true })
-  return null;
+/** Decode JWT payload (no verify — server enforces). */
+export function peekAccessRole(): UserRole | null {
+  const token = getAccessToken();
+  if (!token) return null;
+  try {
+    const part = token.split(".")[1];
+    if (!part) return null;
+    const json = JSON.parse(atob(part.replace(/-/g, "+").replace(/_/g, "/"))) as {
+      role?: UserRole;
+    };
+    return json.role ?? null;
+  } catch {
+    return null;
+  }
 }
+
+/**
+ * Refresh once (deduped). Returns new access token or null.
+ */
+export async function refreshAccessToken(): Promise<string | null> {
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
+    const currentRefresh = getRefreshToken();
+    if (!currentRefresh) return null;
+    try {
+      const tokens = await refreshApi(currentRefresh);
+      setAuthTokens({ access: tokens.accessToken, refresh: tokens.refreshToken });
+      return tokens.accessToken;
+    } catch {
+      clearAuthTokens();
+      return null;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
+}
+
+/** @deprecated use refreshAccessToken */
+export const refreshAccessTokenStub = refreshAccessToken;

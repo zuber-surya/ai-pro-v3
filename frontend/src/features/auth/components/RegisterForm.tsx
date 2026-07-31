@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button, Input } from "@/components/ui";
-import { register } from "@/lib/api";
-import { setAuthTokens } from "@/lib/auth";
+import { getMe, register } from "@/lib/api";
+import { setAuthTokens, setCurrentUser } from "@/lib/auth";
 import { AppError } from "@/types/api";
 
 export function RegisterForm() {
@@ -44,6 +44,7 @@ export function RegisterForm() {
         fullName: fullName.trim(),
       });
       setAuthTokens({ access: tokens.accessToken, refresh: tokens.refreshToken });
+      setCurrentUser(await getMe());
       router.push("/customer");
     } catch (err) {
       if (err instanceof AppError) {

@@ -8,8 +8,8 @@ import {
   hashToken,
   refreshTokenRepository,
 } from "../repositories/refreshToken.repository.js";
-import { userRepository } from "../repositories/user.repository.js";
-import type { LoginInput, RegisterInput } from "../validators/auth.validators.js";
+import { toPublicUser, userRepository } from "../repositories/user.repository.js";
+import type { LoginInput, RefreshInput, RegisterInput } from "../validators/auth.validators.js";
 
 const ACCESS_TTL_SEC = 60 * 15; // 15 minutes
 const REFRESH_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
@@ -51,6 +51,13 @@ async function issueTokenPair(user: User) {
   };
 }
 
+function assertActiveUser(user: User | null): User {
+  if (!user || !user.isActive || user.deletedAt) {
+    throw new AppError("AUTH_INVALID_CREDENTIALS", "Invalid email or password", 401);
+  }
+  return user;
+}
+
 export const authService = {
   async register(input: RegisterInput) {
     const existing = await userRepository.findByEmail(input.email);
@@ -72,10 +79,7 @@ export const authService = {
   },
 
   async login(input: LoginInput) {
-    const user = await userRepository.findByEmail(input.email);
-    if (!user || !user.isActive || user.deletedAt) {
-      throw new AppError("AUTH_INVALID_CREDENTIALS", "Invalid email or password", 401);
-    }
+    const user = assertActiveUser(await userRepository.findByEmail(input.email));
 
     const ok = await bcrypt.compare(input.password, user.passwordHash);
     if (!ok) {
@@ -83,5 +87,28 @@ export const authService = {
     }
 
     return issueTokenPair(user);
+  },
+
+  async refresh(input: RefreshInput) {
+    const record = await refreshTokenRepository.findValidByHash(hashToken(input.refreshToken));
+    if (!record) {
+      throw new AppError("AUTH_INVALID_CREDENTIALS", "Invalid refresh token", 401);
+    }
+
+    const user = assertActiveUser(record.user);
+    await refreshTokenRepository.revoke(record.id);
+    return issueTokenPair(user);
+  },
+
+  async logout(userId: string) {
+    await refreshTokenRepository.revokeAllForUser(userId);
+  },
+
+  async me(userId: string) {
+    const user = await userRepository.findById(userId);
+    if (!user || !user.isActive || user.deletedAt) {
+      throw new AppError("AUTH_INVALID_CREDENTIALS", "User not found", 401);
+    }
+    return toPublicUser(user);
   },
 };
