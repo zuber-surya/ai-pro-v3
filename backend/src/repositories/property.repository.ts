@@ -1,5 +1,10 @@
-import type { Prisma, Property, PropertyStatus } from "@prisma/client";
+import type { Prisma, Property, PropertyAmenity, PropertyStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
+
+export type PublicAmenity = {
+  name: string;
+  isCustom: boolean;
+};
 
 export type PublicProperty = {
   id: string;
@@ -19,6 +24,7 @@ export type PublicProperty = {
     postalCode: string | null;
     country: string | null;
   };
+  amenities: string[];
   featured: boolean;
   agentId: string | null;
   createdAt: string;
@@ -26,7 +32,9 @@ export type PublicProperty = {
   publishedAt: string | null;
 };
 
-export function toPublicProperty(p: Property): PublicProperty {
+type PropertyWithAmenities = Property & { amenities?: PropertyAmenity[] };
+
+export function toPublicProperty(p: PropertyWithAmenities): PublicProperty {
   return {
     id: p.id,
     title: p.title,
@@ -45,6 +53,7 @@ export function toPublicProperty(p: Property): PublicProperty {
       postalCode: p.postalCode,
       country: p.country,
     },
+    amenities: (p.amenities ?? []).map((a) => a.name),
     featured: p.featured,
     agentId: p.agentId,
     createdAt: p.createdAt.toISOString(),
@@ -63,7 +72,9 @@ export type PropertyListFilter = {
   agentId?: string | null;
 };
 
-function buildWhere(filter: Omit<PropertyListFilter, "page" | "pageSize" | "sortBy" | "sortOrder">): Prisma.PropertyWhereInput {
+function buildWhere(
+  filter: Omit<PropertyListFilter, "page" | "pageSize" | "sortBy" | "sortOrder">,
+): Prisma.PropertyWhereInput {
   const where: Prisma.PropertyWhereInput = {};
   if (filter.status) where.status = filter.status;
   if (filter.agentId) where.agentId = filter.agentId;
@@ -81,7 +92,10 @@ function buildWhere(filter: Omit<PropertyListFilter, "page" | "pageSize" | "sort
 
 export const propertyRepository = {
   findById(id: string) {
-    return prisma.property.findUnique({ where: { id } });
+    return prisma.property.findUnique({
+      where: { id },
+      include: { amenities: { orderBy: { name: "asc" } } },
+    });
   },
 
   async list(filter: PropertyListFilter) {
@@ -94,6 +108,7 @@ export const propertyRepository = {
         orderBy,
         skip: (filter.page - 1) * filter.pageSize,
         take: filter.pageSize,
+        include: { amenities: { orderBy: { name: "asc" } } },
       }),
     ]);
     return { total, rows };
@@ -112,11 +127,18 @@ export const propertyRepository = {
   },
 
   create(data: Prisma.PropertyCreateInput) {
-    return prisma.property.create({ data });
+    return prisma.property.create({
+      data,
+      include: { amenities: true },
+    });
   },
 
   update(id: string, data: Prisma.PropertyUpdateInput) {
-    return prisma.property.update({ where: { id }, data });
+    return prisma.property.update({
+      where: { id },
+      data,
+      include: { amenities: { orderBy: { name: "asc" } } },
+    });
   },
 
   delete(id: string) {
@@ -134,5 +156,22 @@ export const propertyRepository = {
         publishedAt: status === "published" ? new Date() : undefined,
       },
     });
+  },
+
+  async replaceAmenities(
+    propertyId: string,
+    amenities: Array<{ name: string; isCustom: boolean }>,
+  ) {
+    await prisma.$transaction([
+      prisma.propertyAmenity.deleteMany({ where: { propertyId } }),
+      prisma.propertyAmenity.createMany({
+        data: amenities.map((a) => ({
+          propertyId,
+          name: a.name,
+          isCustom: a.isCustom,
+        })),
+      }),
+    ]);
+    return this.findById(propertyId);
   },
 };

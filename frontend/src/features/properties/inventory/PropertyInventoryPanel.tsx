@@ -462,6 +462,9 @@ export function PropertyInventoryPanel() {
                       ) : null}
                       <td className="px-lg py-md">
                         <div className="flex flex-wrap justify-end gap-xs">
+                          <Link href={`/properties/${p.id}/edit`}>
+                            <Button variant="ghost">Edit</Button>
+                          </Link>
                           <Button
                             variant="ghost"
                             disabled={busyId === p.id}

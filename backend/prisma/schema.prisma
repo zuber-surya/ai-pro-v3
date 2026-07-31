@@ -105,6 +105,7 @@ model Property {
   updatedAt     DateTime       @updatedAt @map("updated_at")
 
   agent Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  amenities PropertyAmenity[]
 
   @@index([status], map: "ix_properties_status")
   @@index([price], map: "ix_properties_price")
@@ -113,4 +114,19 @@ model Property {
   @@index([agentId], map: "ix_properties_agent_id")
   @@index([publishedAt], map: "ix_properties_published_at")
   @@map("properties")
+}
+
+model PropertyAmenity {
+  id         String   @id @default(uuid()) @db.Uuid
+  propertyId String   @map("property_id") @db.Uuid
+  name       String   @db.VarChar(120)
+  isCustom   Boolean  @default(false) @map("is_custom")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, name], map: "uq_property_amenities_property_name")
+  @@index([propertyId], map: "ix_property_amenities_property_id")
+  @@map("property_amenities")
 }

@@ -6,11 +6,13 @@ import { requireRole } from "../middleware/requireRole.middleware.js";
 import { propertyService } from "../services/property.service.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
+  amenitiesUpdateSchema,
   bulkPropertyStatusSchema,
   exportPropertiesQuerySchema,
   listPropertiesQuerySchema,
   propertyCreateSchema,
   propertyStatusPatchSchema,
+  propertyUpdateSchema,
 } from "../validators/property.validators.js";
 
 export const propertiesRouter = Router();
@@ -93,9 +95,43 @@ propertiesRouter.post(
 
 propertiesRouter.get(
   "/:id",
+  (req, res, next) => {
+    if (req.headers.authorization) {
+      requireAuth(req, res, next);
+      return;
+    }
+    next();
+  },
   asyncHandler(async (req, res) => {
-    // optional auth for guest published access — skip middleware
-    const property = await propertyService.getById(req.params.id);
+    const property = await propertyService.getById(req.params.id, req.authUser);
+    res.status(200).json(property);
+  }),
+);
+
+propertiesRouter.patch(
+  "/:id",
+  requireAuth,
+  requireRole("agent", "admin", "super_admin"),
+  asyncHandler(async (req, res) => {
+    const parsed = propertyUpdateSchema.safeParse(req.body);
+    if (!parsed.success) throw zodToAppError(parsed.error);
+    const property = await propertyService.update(req.params.id, parsed.data, req.authUser!);
+    res.status(200).json(property);
+  }),
+);
+
+propertiesRouter.put(
+  "/:id/amenities",
+  requireAuth,
+  requireRole("agent", "admin", "super_admin"),
+  asyncHandler(async (req, res) => {
+    const parsed = amenitiesUpdateSchema.safeParse(req.body);
+    if (!parsed.success) throw zodToAppError(parsed.error);
+    const property = await propertyService.replaceAmenities(
+      req.params.id,
+      parsed.data,
+      req.authUser!,
+    );
     res.status(200).json(property);
   }),
 );

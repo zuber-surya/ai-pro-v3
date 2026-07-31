@@ -15,7 +15,10 @@ export {
 export type { Agent, PaginatedAgents, AgentCreatePayload, AgentUpdatePayload } from "./agents";
 export {
   listProperties,
+  getProperty,
   createProperty,
+  updateProperty,
+  replaceAmenities,
   updatePropertyStatus,
   archiveProperty,
   duplicateProperty,
@@ -29,4 +32,5 @@ export type {
   PaginatedProperties,
   ListPropertiesParams,
   PropertyCreatePayload,
+  PropertyUpdatePayload,
 } from "./properties";

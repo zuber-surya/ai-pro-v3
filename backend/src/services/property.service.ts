@@ -1,3 +1,4 @@
+import type { Property } from "@prisma/client";
 import { AppError } from "../middleware/errorHandler.js";
 import type { AuthUser } from "../middleware/requireAuth.middleware.js";
 import { agentRepository } from "../repositories/agent.repository.js";
@@ -6,15 +7,18 @@ import {
   toPublicProperty,
 } from "../repositories/property.repository.js";
 import type {
+  AmenitiesUpdateInput,
   BulkPropertyStatusInput,
   ExportPropertiesQuery,
   ListPropertiesQuery,
   PropertyCreateInput,
+  PropertyUpdateInput,
 } from "../validators/property.validators.js";
+import { STANDARD_AMENITIES } from "../validators/property.validators.js";
 
 async function resolveAgentScope(actor: AuthUser): Promise<string | null | undefined> {
   if (actor.role === "admin" || actor.role === "super_admin") {
-    return undefined; // no agent filter
+    return undefined;
   }
   if (actor.role === "agent") {
     const agent = await agentRepository.findByUserId(actor.id);
@@ -45,6 +49,44 @@ function csvEscape(value: string): string {
   return value;
 }
 
+type PublishFields = {
+  title: string;
+  price: { toString(): string } | string | number;
+  propertyType: string;
+  bedrooms: number;
+  bathrooms: { toString(): string } | number;
+  areaSqFt: { toString(): string } | number;
+  addressLine: string;
+};
+
+/** Publish requires core listing fields (SRS). */
+function assertPublishable(p: PublishFields): void {
+  const details: Array<{ field?: string; issue: string }> = [];
+  if (!p.title?.trim()) details.push({ field: "title", issue: "required for publish" });
+  if (!p.propertyType?.trim()) details.push({ field: "propertyType", issue: "required for publish" });
+  if (!p.addressLine?.trim()) details.push({ field: "addressLine", issue: "required for publish" });
+  const price = Number(p.price);
+  if (!(price > 0)) details.push({ field: "price", issue: "must be greater than 0" });
+  if (Number(p.bedrooms) < 0) details.push({ field: "bedrooms", issue: "invalid" });
+  if (Number(p.bathrooms) < 0) details.push({ field: "bathrooms", issue: "invalid" });
+  if (!(Number(p.areaSqFt) > 0)) details.push({ field: "areaSqFt", issue: "must be greater than 0" });
+  if (details.length) {
+    throw new AppError("VALIDATION_ERROR", "Cannot publish incomplete listing", 422, details);
+  }
+}
+
+function mergeForPublish(existing: Property, input: PropertyUpdateInput): PublishFields {
+  return {
+    title: input.title ?? existing.title,
+    price: input.price ?? existing.price,
+    propertyType: input.propertyType ?? existing.propertyType,
+    bedrooms: input.bedrooms ?? existing.bedrooms,
+    bathrooms: input.bathrooms ?? existing.bathrooms,
+    areaSqFt: input.areaSqFt ?? existing.areaSqFt,
+    addressLine: input.addressLine ?? existing.addressLine,
+  };
+}
+
 export const propertyService = {
   async list(query: ListPropertiesQuery, actor: AuthUser) {
     const agentId = await resolveAgentScope(actor);
@@ -67,14 +109,7 @@ export const propertyService = {
     const property = await propertyRepository.findById(id);
     if (!property) throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
 
-    if (!actor) {
-      if (property.status !== "published") {
-        throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
-      }
-      return toPublicProperty(property);
-    }
-
-    if (actor.role === "customer") {
+    if (!actor || actor.role === "customer") {
       if (property.status !== "published") {
         throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
       }
@@ -96,6 +131,18 @@ export const propertyService = {
     }
 
     const status = input.status ?? "draft";
+    if (status === "published") {
+      assertPublishable({
+        title: input.title,
+        price: input.price,
+        propertyType: input.propertyType,
+        bedrooms: input.bedrooms,
+        bathrooms: input.bathrooms,
+        areaSqFt: input.areaSqFt,
+        addressLine: input.addressLine,
+      });
+    }
+
     const property = await propertyRepository.create({
       title: input.title,
       description: input.description,
@@ -117,6 +164,45 @@ export const propertyService = {
     return toPublicProperty(property);
   },
 
+  async update(id: string, input: PropertyUpdateInput, actor: AuthUser) {
+    const existing = await propertyRepository.findById(id);
+    if (!existing) throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
+    await assertCanAccessProperty(actor, existing.agentId);
+
+    const nextStatus = input.status ?? existing.status;
+    if (nextStatus === "published") {
+      assertPublishable(mergeForPublish(existing, input));
+    }
+
+    const property = await propertyRepository.update(id, {
+      title: input.title,
+      description: input.description === null ? null : input.description,
+      status: input.status,
+      price: input.price,
+      propertyType: input.propertyType,
+      bedrooms: input.bedrooms,
+      bathrooms: input.bathrooms,
+      areaSqFt: input.areaSqFt,
+      addressLine: input.addressLine,
+      city: input.city === null ? null : input.city,
+      region: input.region === null ? null : input.region,
+      postalCode: input.postalCode === null ? null : input.postalCode,
+      country: input.country === null ? null : input.country,
+      featured: input.featured,
+      publishedAt:
+        nextStatus === "published"
+          ? existing.publishedAt ?? new Date()
+          : existing.publishedAt,
+      agent:
+        input.agentId === undefined
+          ? undefined
+          : input.agentId === null
+            ? { disconnect: true }
+            : { connect: { id: input.agentId } },
+    });
+    return toPublicProperty(property);
+  },
+
   async updateStatus(
     id: string,
     status: "draft" | "published" | "archived" | "sold" | "rented",
@@ -126,14 +212,14 @@ export const propertyService = {
     if (!existing) throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
     await assertCanAccessProperty(actor, existing.agentId);
 
+    if (status === "published") {
+      assertPublishable(existing);
+    }
+
     const property = await propertyRepository.update(id, {
       status,
       publishedAt:
-        status === "published"
-          ? existing.publishedAt ?? new Date()
-          : status === "draft" || status === "archived"
-            ? existing.publishedAt
-            : existing.publishedAt,
+        status === "published" ? (existing.publishedAt ?? new Date()) : existing.publishedAt,
     });
     return toPublicProperty(property);
   },
@@ -180,7 +266,43 @@ export const propertyService = {
       publishedAt: null,
       agent: agentId ? { connect: { id: agentId } } : undefined,
     });
+
+    if (existing.amenities?.length) {
+      await propertyRepository.replaceAmenities(
+        copy.id,
+        existing.amenities.map((a) => ({ name: a.name, isCustom: a.isCustom })),
+      );
+      const reloaded = await propertyRepository.findById(copy.id);
+      return toPublicProperty(reloaded!);
+    }
+
     return toPublicProperty(copy);
+  },
+
+  async replaceAmenities(id: string, input: AmenitiesUpdateInput, actor: AuthUser) {
+    const existing = await propertyRepository.findById(id);
+    if (!existing) throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
+    await assertCanAccessProperty(actor, existing.agentId);
+
+    const standard = new Set(STANDARD_AMENITIES.map((s) => s.toLowerCase()));
+    const seen = new Set<string>();
+    const amenities = input.amenities
+      .map((n) => n.trim())
+      .filter(Boolean)
+      .filter((n) => {
+        const key = n.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map((name) => ({
+        name,
+        isCustom: !standard.has(name.toLowerCase()),
+      }));
+
+    const property = await propertyRepository.replaceAmenities(id, amenities);
+    if (!property) throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
+    return toPublicProperty(property);
   },
 
   async bulkStatus(input: BulkPropertyStatusInput, actor: AuthUser) {

@@ -23,6 +23,7 @@ export type Property = {
     postalCode: string | null;
     country: string | null;
   };
+  amenities: string[];
   featured: boolean;
   agentId: string | null;
   createdAt: string;
@@ -60,6 +61,21 @@ export type PropertyCreatePayload = {
   areaSqFt?: number;
   status?: PropertyStatus;
   description?: string;
+  featured?: boolean;
+};
+
+export type PropertyUpdatePayload = {
+  title?: string;
+  description?: string | null;
+  price?: string;
+  propertyType?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  areaSqFt?: number;
+  addressLine?: string;
+  city?: string | null;
+  featured?: boolean;
+  status?: PropertyStatus;
 };
 
 function toQuery(params?: ListPropertiesParams & { format?: string; limit?: number }) {
@@ -76,8 +92,23 @@ export function listProperties(params?: ListPropertiesParams) {
   return apiRequest<PaginatedProperties>(`/properties${toQuery(params)}`);
 }
 
+export function getProperty(id: string) {
+  return apiRequest<Property>(`/properties/${id}`);
+}
+
 export function createProperty(payload: PropertyCreatePayload) {
   return apiRequest<Property>("/properties", { method: "POST", body: payload });
+}
+
+export function updateProperty(id: string, payload: PropertyUpdatePayload) {
+  return apiRequest<Property>(`/properties/${id}`, { method: "PATCH", body: payload });
+}
+
+export function replaceAmenities(id: string, amenities: string[]) {
+  return apiRequest<Property>(`/properties/${id}/amenities`, {
+    method: "PUT",
+    body: { amenities },
+  });
 }
 
 export function updatePropertyStatus(id: string, status: PropertyStatus) {
