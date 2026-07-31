@@ -106,6 +106,7 @@ model Property {
 
   agent Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
   amenities PropertyAmenity[]
+  images    PropertyImage[]
 
   @@index([status], map: "ix_properties_status")
   @@index([price], map: "ix_properties_price")
@@ -129,4 +130,25 @@ model PropertyAmenity {
   @@unique([propertyId, name], map: "uq_property_amenities_property_name")
   @@index([propertyId], map: "ix_property_amenities_property_id")
   @@map("property_amenities")
+}
+
+enum PropertyImageKind {
+  photo
+  floorplan
+}
+
+model PropertyImage {
+  id         String            @id @default(uuid()) @db.Uuid
+  propertyId String            @map("property_id") @db.Uuid
+  url        String
+  kind       PropertyImageKind @default(photo)
+  sortOrder  Int               @default(0) @map("sort_order")
+  caption    String?           @db.VarChar(300)
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, sortOrder], map: "ix_property_images_property_id_sort")
+  @@map("property_images")
 }

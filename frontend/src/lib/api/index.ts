@@ -25,6 +25,9 @@ export {
   deleteProperty,
   bulkUpdatePropertyStatus,
   exportPropertiesCsv,
+  listPropertyImages,
+  uploadPropertyImage,
+  deletePropertyImage,
 } from "./properties";
 export type {
   Property,
@@ -33,4 +36,5 @@ export type {
   ListPropertiesParams,
   PropertyCreatePayload,
   PropertyUpdatePayload,
+  PropertyImage,
 } from "./properties";

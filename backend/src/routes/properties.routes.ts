@@ -1,9 +1,12 @@
 import { Router } from "express";
+import multer from "multer";
 import { ZodError } from "zod";
 import { AppError } from "../middleware/errorHandler.js";
 import { requireAuth } from "../middleware/requireAuth.middleware.js";
 import { requireRole } from "../middleware/requireRole.middleware.js";
+import { localStorageLimits } from "../integrations/storage/local.storage.js";
 import { propertyService } from "../services/property.service.js";
+import { propertyImageService } from "../services/propertyImage.service.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   amenitiesUpdateSchema,
@@ -14,8 +17,14 @@ import {
   propertyStatusPatchSchema,
   propertyUpdateSchema,
 } from "../validators/property.validators.js";
+import { propertyImageUploadMetaSchema } from "../validators/propertyImage.validators.js";
 
 export const propertiesRouter = Router();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: localStorageLimits.maxBytes },
+});
 
 function zodToAppError(err: ZodError): AppError {
   return new AppError(
@@ -27,6 +36,27 @@ function zodToAppError(err: ZodError): AppError {
       issue: i.message,
     })),
   );
+}
+
+function multerErrorHandler(
+  err: unknown,
+  _req: import("express").Request,
+  _res: import("express").Response,
+  next: import("express").NextFunction,
+): void {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      next(
+        new AppError("VALIDATION_ERROR", "Image exceeds 2MB limit", 422, [
+          { field: "file", issue: "max 2MB" },
+        ]),
+      );
+      return;
+    }
+    next(new AppError("VALIDATION_ERROR", err.message, 422, [{ field: "file", issue: err.code }]));
+    return;
+  }
+  next(err);
 }
 
 propertiesRouter.get(
@@ -133,6 +163,54 @@ propertiesRouter.put(
       req.authUser!,
     );
     res.status(200).json(property);
+  }),
+);
+
+propertiesRouter.get(
+  "/:id/images",
+  (req, res, next) => {
+    if (req.headers.authorization) {
+      requireAuth(req, res, next);
+      return;
+    }
+    next();
+  },
+  asyncHandler(async (req, res) => {
+    const images = await propertyImageService.list(req.params.id, req.authUser);
+    res.status(200).json(images);
+  }),
+);
+
+propertiesRouter.post(
+  "/:id/images",
+  requireAuth,
+  requireRole("agent", "admin", "super_admin"),
+  (req, res, next) => {
+    upload.single("file")(req, res, (err) => multerErrorHandler(err, req, res, next));
+  },
+  asyncHandler(async (req, res) => {
+    const parsed = propertyImageUploadMetaSchema.safeParse(req.body);
+    if (!parsed.success) throw zodToAppError(parsed.error);
+    const file = req.file
+      ? { mimetype: req.file.mimetype, size: req.file.size, buffer: req.file.buffer }
+      : undefined;
+    const image = await propertyImageService.upload(
+      req.params.id,
+      file,
+      parsed.data,
+      req.authUser!,
+    );
+    res.status(201).json(image);
+  }),
+);
+
+propertiesRouter.delete(
+  "/:id/images/:imageId",
+  requireAuth,
+  requireRole("agent", "admin", "super_admin"),
+  asyncHandler(async (req, res) => {
+    await propertyImageService.remove(req.params.id, req.params.imageId, req.authUser!);
+    res.status(204).send();
   }),
 );
 

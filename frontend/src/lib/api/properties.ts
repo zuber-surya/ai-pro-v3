@@ -161,3 +161,51 @@ export async function exportPropertiesCsv(params?: ListPropertiesParams): Promis
   }
   return res.blob();
 }
+
+export type PropertyImage = {
+  id: string;
+  url: string;
+  kind: "photo" | "floorplan";
+  caption: string | null;
+  sortOrder: number;
+};
+
+export function listPropertyImages(propertyId: string) {
+  return apiRequest<PropertyImage[]>(`/properties/${propertyId}/images`);
+}
+
+export async function uploadPropertyImage(
+  propertyId: string,
+  file: File,
+  meta: { kind: "photo" | "floorplan"; caption?: string },
+): Promise<PropertyImage> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("kind", meta.kind);
+  if (meta.caption) form.append("caption", meta.caption);
+  const token = getAccessToken();
+  const res = await fetch(`${publicEnv.apiBaseUrl}/properties/${propertyId}/images`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  if (!res.ok) {
+    let code = "INTERNAL_ERROR";
+    let message = res.statusText;
+    let details: AppError["details"] = [];
+    try {
+      const data = (await res.json()) as ApiErrorEnvelope;
+      code = data.error?.code ?? code;
+      message = data.error?.message ?? message;
+      details = data.error?.details ?? [];
+    } catch {
+      /* ignore */
+    }
+    throw new AppError(code, message, res.status, details);
+  }
+  return (await res.json()) as PropertyImage;
+}
+
+export function deletePropertyImage(propertyId: string, imageId: string) {
+  return apiRequest<void>(`/properties/${propertyId}/images/${imageId}`, { method: "DELETE" });
+}

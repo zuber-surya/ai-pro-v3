@@ -12,6 +12,7 @@ import {
   type Property,
 } from "@/lib/api/properties";
 import { AppError } from "@/types/api";
+import { PropertyMediaSection } from "./media/PropertyMediaSection";
 
 const STANDARD_AMENITIES = [
   "Parking",
@@ -187,10 +188,13 @@ export function ListingEditorPanel({ propertyId }: { propertyId: string }) {
       {/* Tabs: Basic Info active; Media omitted (no video/tour) */}
       <div className="flex gap-lg border-b border-outline-variant">
         <span className="border-b-2 border-primary pb-md font-label-md text-primary">Basic Info</span>
+        <span className="pb-md font-label-md text-on-surface-variant">Media</span>
         <span className="pb-md font-label-md text-on-surface-variant">Amenities</span>
       </div>
 
       {error ? <ErrorState message={error} /> : null}
+
+      <PropertyMediaSection propertyId={propertyId} />
 
       <section className="space-y-md rounded-xl border border-outline-variant bg-surface-container-lowest p-lg">
         <h2 className="font-headline-md text-headline-md">Basic Info</h2>

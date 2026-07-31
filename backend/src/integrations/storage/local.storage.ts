@@ -52,6 +52,23 @@ export async function saveAgentImage(
   return `/uploads/agents/${agentId}/${filename}`;
 }
 
+/**
+ * Saves property photo/floorplan under STORAGE_ROOT/properties/{propertyId}/.
+ */
+export async function savePropertyImage(
+  propertyId: string,
+  file: { mimetype: string; size: number; buffer: Buffer },
+  kind: "photo" | "floorplan",
+): Promise<string> {
+  assertValidImageUpload(file);
+  const ext = EXT_BY_MIME[file.mimetype] ?? ".bin";
+  const dir = path.join(env.STORAGE_ROOT, "properties", propertyId, kind);
+  await mkdir(dir, { recursive: true });
+  const filename = `${randomUUID()}${ext}`;
+  await writeFile(path.join(dir, filename), file.buffer);
+  return `/uploads/properties/${propertyId}/${kind}/${filename}`;
+}
+
 export const localStorageLimits = {
   maxBytes: MAX_BYTES,
   allowedMime: [...ALLOWED_MIME],
