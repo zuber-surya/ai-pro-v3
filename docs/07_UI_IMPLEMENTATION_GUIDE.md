@@ -51,7 +51,10 @@ This guide is the **mandatory implementation checklist** for every screen in `de
 | SCR-HOME | `/` |
 | SCR-SEARCH-* | `/search` (query + `mode`/`status` drives STD/FB/EMPTY) |
 | SCR-PROP-D | `/properties/[id]` |
+| SCR-LOGIN | `/login` (functional only — no design_reference HTML) |
+| SCR-REGISTER | `/register` (functional only — no design_reference HTML) |
 | SCR-CUS-DASH | `/customer` |
+| SCR-CLIENTS | `/admin/leads` (lead list; functional / ClientsView — no design_reference HTML) |
 | SCR-LEAD-KANBAN | `/admin/leads/pipeline` (Future only) |
 | SCR-LEAD-D | `/admin/leads/[id]` |
 | SCR-PROP-EDIT | `/admin/properties/new`, `/admin/properties/[id]/edit` |
@@ -59,8 +62,60 @@ This guide is the **mandatory implementation checklist** for every screen in `de
 | SCR-BULK | `/admin/properties/bulk` |
 | SCR-AI-CFG | `/admin/ai-config` |
 | SCR-CMD | `/admin` |
+| SCR-USERS | `/admin/users` (functional only) |
+| SCR-AGENTS | `/admin/agents` (functional only) |
+| SCR-CMS | `/admin/cms` (functional only) |
+| SCR-NTF-RULES | `/admin/notification-rules` (functional only) |
+| SCR-REPORTS | `/admin/reports` (functional only) |
 
 ---
+
+## SCR-LOGIN / SCR-REGISTER: Auth (functional only)
+
+| Field | Value |
+|-------|--------|
+| **Screen ID** | SCR-LOGIN, SCR-REGISTER |
+| **Route** | `/login`, `/register` |
+| **HTML Reference** | None under `design_reference/` — implement clean functional forms using shared tokens (`SCR-SHELL-TOKENS`) |
+| **MVP** | Yes |
+| **Roles** | Guest |
+
+### APIs
+- `POST /api/v1/auth/token` (login)
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/refresh` (session shell)
+
+### Validation
+- Email format required; password min length 8 (OpenAPI / SRS)
+
+### Loading / Empty / Error / Success
+- Loading on submit; inline validation errors; `AUTH_INVALID_CREDENTIALS` / `CONFLICT_DUPLICATE_EMAIL` mapped to form errors; success → redirect per role
+
+### Acceptance Criteria
+- [ ] Guest can register and obtain session
+- [ ] Guest can login via `POST /auth/token` and reach role home
+- [ ] Invalid credentials show generic message (no user enumeration)
+
+---
+
+## SCR-CLIENTS: Lead List (functional only)
+
+| Field | Value |
+|-------|--------|
+| **Screen ID** | SCR-CLIENTS |
+| **Route** | `/admin/leads` |
+| **HTML Reference** | None under `design_reference/` — list UI per PRD/SRS (`ClientsView` intent); **not** Kanban |
+| **MVP** | Yes |
+| **Roles** | Agent, Admin, Super Admin |
+
+### APIs
+- `GET /api/v1/leads` (filters, pagination)
+- Navigate to `SCR-LEAD-D` at `/admin/leads/[id]`
+
+### Acceptance Criteria
+- [ ] Authenticated Agent/Admin/Super Admin can list leads
+- [ ] Row opens lead detail
+- [ ] No Kanban board in MVP nav
 
 ---
 
@@ -133,6 +188,9 @@ N/A on homepage (filters on search results)
 
 ### Error State
 - CMS/featured/chat API failures: designed toast/inline; chat user-safe error
+
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
 
 ### Responsive Behaviour
 - Mobile: stacked hero, chat FAB; desktop: full marketing composition per HTML
@@ -239,6 +297,9 @@ N/A (card/list results)
 ### Error State
 - API error → prefer fallback path; else error banner
 
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
+
 ### Responsive Behaviour
 - Sidebar collapses on mobile; filters drawer if HTML implies
 
@@ -337,6 +398,9 @@ N/A
 
 ### Error State
 - Banner must remain visible on error-driven fallback
+
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
 
 ### Responsive Behaviour
 - Mobile filter sheet; FAB per HTML
@@ -437,6 +501,9 @@ N/A
 
 ### Error State
 - If search errors without fallback data, show error + recovery CTAs
+
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
 
 ### Responsive Behaviour
 - Stack empty message and CTAs on mobile
@@ -546,6 +613,9 @@ N/A
 ### Error State
 - 404 page/state; API error banner
 
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
+
 ### Responsive Behaviour
 - Gallery full-bleed on mobile; stacked sections; map height per HTML
 
@@ -652,6 +722,9 @@ N/A primary
 ### Error State
 - API error toasts; auth 401 → login
 
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
+
 ### Responsive Behaviour
 - Side nav becomes top/bottom tabs on mobile if HTML implies
 
@@ -748,6 +821,9 @@ Table alternate view in HTML
 
 ### Error State
 - Error toast (future)
+
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
 
 ### Responsive Behaviour
 - Horizontal scroll columns on mobile (future)
@@ -854,6 +930,9 @@ N/A
 
 ### Error State
 - 404/403 pages
+
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
 
 ### Responsive Behaviour
 - Stack panels on mobile
@@ -966,6 +1045,9 @@ N/A
 ### Error State
 - Validation toasts/inline; 403 if unauthorized
 
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
+
 ### Responsive Behaviour
 - Single column form on mobile
 
@@ -1071,6 +1153,9 @@ N/A (filters + search)
 ### Error State
 - Error banner + retry
 
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
+
 ### Responsive Behaviour
 - Cards on mobile / table on desktop per HTML
 
@@ -1173,6 +1258,9 @@ N/A beyond validation results filters/tabs if HTML has tabs
 
 ### Error State
 - Parse failure message; import conflict
+
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
 
 ### Responsive Behaviour
 - Table horizontal scroll on mobile
@@ -1280,6 +1368,9 @@ N/A
 ### Error State
 - Save failure toast
 
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
+
 ### Responsive Behaviour
 - Split pane stacks on mobile
 
@@ -1381,6 +1472,9 @@ N/A (cards/charts/feed)
 
 ### Error State
 - Metrics error with retry
+
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
 
 ### Responsive Behaviour
 - Chart stack on mobile; KPI wrap
@@ -1488,6 +1582,9 @@ Activity feed != excluded CRM timeline product.
 ### State / Validation / Buttons / Forms / Tables / Search / Filters / Loading / Empty / Error
 - N/A (static asset)
 
+### Success State
+- Happy-path `ready`/`success` UI matches HTML after successful load or submit; show designed toast/banner only if HTML specifies
+
 ### Responsive Behaviour
 - Serve appropriate resolution / SVG if extracted
 
@@ -1514,7 +1611,7 @@ A screen is **COMPLETE** only when:
 3. Responsive verified  
 4. All interactions implemented  
 5. Validation implemented  
-6. Loading, empty, error states done  
+6. Loading, empty, error, and success states done  
 7. APIs integrated  
 8. No console / TS / ESLint issues  
 9. Code reviewed + QA approved  

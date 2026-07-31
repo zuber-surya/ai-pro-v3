@@ -21,11 +21,13 @@
 | Functional SOT | `docs/REQUIREMENTS_AND_PROPOSAL.md` |
 | UI SOT | `docs/design_reference/**` (HTML wins) |
 | API SOT | `docs/openapi.yaml` |
-| Handover owner (outgoing) | _TBD_ |
-| Handover owner (incoming) | _TBD_ |
-| Handover date | _TBD_ |
+| Handover owner (outgoing) | Open — assign at operational handover (not blocking docs freeze) |
+| Handover owner (incoming) | Open — assign at operational handover (not blocking docs freeze) |
+| Handover date | Open — assign at operational handover (not blocking docs freeze) |
 
 **Conflict resolution order:** Constitution → design_reference HTML → Requirements → PRD/SRS → Architecture/DB/OpenAPI → implementation guides.
+
+**Docs freeze open items (explicit):** Named people for Product Owner, Tech Lead, QA Lead, Release Manager, DevOps, Security, Gemini billing, Email admin, DBA remain unassigned in § contacts until staffing is known. Demo credentials stay in a private runbook (not git). Repo/GitHub/CI/`CLAUDE.md` deferred until Q2 choice (2A/2B/2C).
 
 ---
 
@@ -570,6 +572,7 @@ Highlights:
 | OpenAPI | `docs/openapi.yaml` | API contract |
 | Design reference | `docs/design_reference/**` | UI SOT |
 | **This guide** | `docs/20_PROJECT_HANDOVER_GUIDE.md` | Ownership transfer |
+| Docs freeze gate | `docs/DOCS_FREEZE_GATE.md` | Approval + `docs-v1.0` tag checklist |
 
 ---
 

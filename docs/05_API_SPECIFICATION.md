@@ -11,12 +11,17 @@ Property AI Studio (PropVista CRM) -- OpenAPI **3.1**.
 
 - **Base path:** `/api/v1`
 - **Auth:** JWT Bearer
+- **Login path:** `POST /auth/token` (canonical; there is no separate `/auth/login`)
 - **AI provider:** Gemini only
 - **Roles:** `customer`, `agent`, `admin`, `super_admin` -- **Guest** = no auth
-- **Error envelope:** `{"error":{"code","message","details[]"}}`
+- **Error envelope:** `{"error":{"code","message","details[]"}}` — `code` values from SRS Appendix P (see Error codes below)
 - **Pagination:** `meta` on list responses
 - **Prices:** decimal strings
 - **Notification channels:** `email`, `in_app` only
+
+## Mock API policy
+
+MVP uses **real OpenAPI contracts** as the single API SOT. Temporary frontend mocks are allowed only until the matching backend operation is ready; mocks **must** match `openapi.yaml` request/response shapes and error codes. There is **no** separate approved-mock catalog. Remove mocks when the Express endpoint ships.
 
 ## Servers
 
@@ -33,21 +38,23 @@ Property AI Studio (PropVista CRM) -- OpenAPI **3.1**.
 
 ## Operations by tag
 
+Primary FR linkage is summarized per tag. Exact FEAT→FR map: `08_EPICS_AND_FEATURES.md` §8.
+
 ### Health
 
-| Method | Path | Summary |
-|--------|------|---------|
-| GET | `/health` | Health check |
+| Method | Path | Summary | FR (primary) |
+|--------|------|---------|--------------|
+| GET | `/health` | Health check | FR-AI-008 / ops |
 
 ### Auth
 
-| Method | Path | Summary |
-|--------|------|---------|
-| POST | `/auth/logout` | Logout |
-| GET | `/auth/me` | Current user profile |
-| POST | `/auth/refresh` | Refresh access token |
-| POST | `/auth/register` | Register customer |
-| POST | `/auth/token` | Obtain tokens |
+| Method | Path | Summary | FR (primary) |
+|--------|------|---------|--------------|
+| POST | `/auth/logout` | Logout | FR-AUTH-002 |
+| GET | `/auth/me` | Current user profile | FR-AUTH-003 |
+| POST | `/auth/refresh` | Refresh access token | FR-AUTH-002 |
+| POST | `/auth/register` | Register customer | FR-AUTH-001 |
+| POST | `/auth/token` | Obtain tokens (login) | FR-AUTH-002 |
 
 ### Users
 
@@ -199,7 +206,48 @@ Property AI Studio (PropVista CRM) -- OpenAPI **3.1**.
 
 See [openapi.json](./openapi.json) `components.schemas`: Error, Meta, UserPublic, Agent, Property, Lead, TokenResponse, AiSearchRequest, AiSearchResponse, AiConfig, enums.
 
+Request/response models, field `required` / `minLength` / `format`, and HTTP status families live in OpenAPI. Implementers must not invent parallel DTOs.
+
+## Error codes (SRS Appendix P)
+
+| Code | HTTP | Meaning |
+|------|------|---------|
+| AUTH_INVALID_CREDENTIALS | 401 | Login failed |
+| AUTH_TOKEN_EXPIRED | 401 | Access token expired |
+| AUTH_FORBIDDEN | 403 | Role not permitted |
+| VALIDATION_ERROR | 400/422 | Field validation failed |
+| RESOURCE_NOT_FOUND | 404 | Entity missing |
+| CONFLICT_DUPLICATE_EMAIL | 409 | Email exists |
+| LEAD_IDEMPOTENCY_REPLAY | 200 | Duplicate Idempotency-Key |
+| AI_UNAVAILABLE | 503 | Gemini unreachable |
+| AI_TIMEOUT | 504 | Gemini timeout |
+| BULK_PARSE_ERROR | 400 | CSV unreadable |
+| BULK_VALIDATION_FAILED | 422 | Row errors present |
+| PROPERTY_PUBLISH_BLOCKED | 422 | Missing required media/fields |
+| RATE_LIMITED | 429 | Too many requests |
+| INTERNAL_ERROR | 500 | Unexpected server fault |
+
+OpenAPI `components.schemas.Error.error.code` enum matches this catalog. UI handling: SRS Appendix P.
+
+## Tag → UI / DB (traceability)
+
+| Tag | Primary UI | Primary tables |
+|-----|------------|----------------|
+| Auth | SCR-LOGIN/REGISTER | `users`, `refresh_tokens` |
+| Users / Agents | SCR-USERS, SCR-AGENTS | `users`, `agents` |
+| Properties / Media | SCR-PROP-* | `properties`, amenities, landmarks, images |
+| Search / AI | SCR-HOME, SCR-SEARCH-*, SCR-PROP-D | `properties` + Gemini |
+| Favorites / Customer | SCR-CUS-DASH | `favorites`, `customer_profiles`, `saved_searches` |
+| Leads / Visits | SCR-CLIENTS, SCR-LEAD-D | `leads`, `lead_notes`, `visit_requests` |
+| Notifications | Bell / SCR-NTF-RULES | `notifications`, `notification_rules` |
+| CMS | SCR-HOME, SCR-CMS | `cms_pages` |
+| Metrics | SCR-CMD, SCR-REPORTS | `metrics_daily_snapshots`, `property_view_events` |
+| AI Config | SCR-AI-CFG | `ai_configs` |
+| Bulk | SCR-BULK | `bulk_upload_*` |
+
 ## Validation
+
+Field-level rules: OpenAPI schemas + SRS FR Validation blocks. Index-level check:
 
 ```bash
 python -c "import json; json.load(open('docs/openapi.json'))"

@@ -200,8 +200,14 @@ features/<name>/
 | SCR-PROP-INV | `/admin/properties` | admin | Agent / Admin / Super Admin |
 | SCR-PROP-EDIT | `/admin/properties/new`, `…/[id]/edit` | admin | Agent / Admin / Super Admin |
 | SCR-BULK | `/admin/properties/bulk` | admin | Admin / Super Admin |
+| SCR-CLIENTS (lead list) | `/admin/leads` | admin | Agent / Admin / Super Admin |
 | SCR-LEAD-D | `/admin/leads/[id]` | admin | Agent / Admin / Super Admin |
 | SCR-AI-CFG | `/admin/ai-config` | admin | Admin / Super Admin |
+| SCR-USERS | `/admin/users` | admin | Admin / Super Admin |
+| SCR-AGENTS | `/admin/agents` | admin | Admin / Super Admin |
+| SCR-CMS | `/admin/cms` | admin | Admin / Super Admin |
+| SCR-NTF-RULES | `/admin/notification-rules` | admin | Admin / Super Admin |
+| SCR-REPORTS | `/admin/reports` | admin | Agent subset / Admin / Super Admin |
 | SCR-LEAD-KANBAN | `/admin/leads/pipeline` | — | **Not in MVP nav** |
 
 ### 5.3 Search routing detail

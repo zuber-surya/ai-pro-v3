@@ -15,8 +15,29 @@
 1. Pick tasks by Sprint / Feature ID.
 2. Respect **Dependencies** before starting.
 3. Layers: **Backend**, **Frontend**, **Testing**, **Documentation**.
-4. Done = task Acceptance Criteria + Constitution DoD for the slice.
-5. Files listed are primary touch targets (create if missing).
+4. **Ready** = task Definition of Ready (§1.1) before work starts.
+5. Done = task Acceptance Criteria + Constitution DoD for the slice.
+6. Files listed are primary touch targets (create if missing).
+
+### 1.1 Definition of Ready (every task)
+
+A task may start only when:
+
+- [ ] Parent Feature meets Constitution §13 DoR (or Feature already in-flight with approved design)
+- [ ] This task’s **Dependencies** are Done or explicitly waived by Tech Lead
+- [ ] Acceptance Criteria on the task are testable and unambiguous
+- [ ] Target files / APIs / screens are identified
+- [ ] Scope is MVP (or explicitly Future and not scheduled in MVP sprint)
+- [ ] OpenAPI / DB / UI guide references exist for the slice (or task is pure scaffold/docs)
+- [ ] No Out-of-MVP exclusion is required to “finish” the task
+
+### 1.2 Definition of Done (every task)
+
+- [ ] Task Acceptance Criteria checked
+- [ ] Constitution §14 DoD items applicable to the slice satisfied
+- [ ] Lint + TypeScript + relevant tests pass
+- [ ] UI slices: pixel checklist for touched screens
+- [ ] Code review approved; mocks removed if backend ready
 
 ## 2. Task ID scheme
 

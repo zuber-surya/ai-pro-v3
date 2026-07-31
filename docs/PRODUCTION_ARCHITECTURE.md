@@ -1,12 +1,16 @@
 # Property AI Studio — Production Architecture
 
+> **SUPERSEDED — Do not use for implementation.**  
+> Canonical document: [`03_SYSTEM_ARCHITECTURE_DOCUMENT.md`](./03_SYSTEM_ARCHITECTURE_DOCUMENT.md).  
+> This file is retained only as a historical duplicate and will be removed after docs freeze.
+
 | Field | Value |
 |-------|--------|
-| **Document** | Production Architecture Design |
+| **Document** | Production Architecture Design (**superseded**) |
 | **Product** | Property AI Studio (UI: PropVista CRM) |
-| **Version** | 1.0.0 |
+| **Version** | 1.0.0 (superseded by `03` v1+) |
 | **Date** | 2026-07-30 |
-| **Status** | Binding for implementation |
+| **Status** | **NON-BINDING** — use `03_SYSTEM_ARCHITECTURE_DOCUMENT.md` |
 | **Sources** | `00_PROJECT_CONSTITUTION.md`, `01_PRODUCT_REQUIREMENTS_DOCUMENT.md`, `02_SOFTWARE_REQUIREMENTS_SPECIFICATION.md` |
 
 ---

@@ -857,6 +857,8 @@ Table saved_searches {
 
 **Audit Fields:** `created_at`, `viewed_at`.
 
+**API usage (MVP):** No dedicated public CRUD resource. Rows are written as a **side effect** of successful `GET /properties/{id}` (and optionally authenticated detail views): application service inserts one `property_view_events` row and may increment `properties.views_count`. Aggregates are **read** via `GET /metrics/dashboard` and `GET /metrics/reports` (not by listing raw events). A future explicit ingest API is out of MVP unless Product amends scope.
+
 ---
 
 ### 4.18 `metrics_daily_snapshots`
@@ -882,6 +884,8 @@ Table saved_searches {
 **Validation:** non-negative counters; conversion_rate 0..1 or 0..100 (pick one—recommend 0..1).
 
 **Audit Fields:** `created_at`, `updated_at`.
+
+**API usage (MVP):** No direct table CRUD. Populated by a scheduled/job or on-demand aggregation service from leads/properties/view events. **Read** exclusively through `GET /metrics/dashboard` and `GET /metrics/reports` for SCR-CMD / SCR-REPORTS.
 
 ---
 

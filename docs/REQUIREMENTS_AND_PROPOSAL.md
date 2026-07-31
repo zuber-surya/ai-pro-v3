@@ -1,21 +1,25 @@
 # Property AI Studio — Requirements & Proposal
 
-> **Source of Truth (SOT)** document for scope, phases, deliverables, and progress tracking.
-> Last updated: 2026-07-29 (frontend design port from `/src` into Next.js)
+> **Document Status:** Functional Source of Truth (SOT)  
+> **Version:** 2.0.0  
+> **Last updated:** 2026-07-31  
+> **Governance:** `docs/00_PROJECT_CONSTITUTION.md` is binding for stack, process, MVP exclusions, and conflict resolution. On any conflict between this file and the Constitution, **the Constitution wins** for stack/process/exclusions; this file remains the functional SOT for features, business rules, roles, scope, modules, and workflows **only where it does not contradict the Constitution**.
 
 ---
 
 ## 1. Executive Summary
 
-Property AI Studio is an AI-powered real estate platform for buyers, sellers, agents, and administrators. It unifies property management, CRM, AI-driven search, lead management, marketing, analytics, and administration into a single product.
+Property AI Studio (UI brand: **PropVista CRM**) is an AI-powered real estate platform for buyers, sellers, agents, and administrators. It unifies property discovery, listing management, CRM lead handling, role-based dashboards, AI-assisted search and chat, loan analysis, notifications, and administration into a **single-organization** web product.
 
-**Core differentiation:** Google Gemini-powered natural language property search and conversational assistant.
+**Core differentiation:** Google Gemini–powered natural language property search and conversational assistance, with explainable match results and admin-configurable AI behavior.
+
+**MVP success:** Guests/customers discover properties via filters and Gemini NLP search; customers manage favorites, inquiries, profile, and loan analysis; agents/admins manage properties, leads, users/agents, CMS, reports, and AI configuration; UI matches `docs/design_reference/**`; APIs are real, typed, and role-aware.
 
 ---
 
 ## 2. Problem Statement
 
-Real estate professionals juggle fragmented tools for listing, search, lead capture, client communication, and reporting. Buyers struggle with rigid search filters that don't match how they think about homes. No single platform combines CRM, AI search, and transaction management with a modern UX.
+Real estate professionals juggle fragmented tools for listing, search, lead capture, client communication, and reporting. Buyers struggle with rigid search filters that do not match how they think about homes. No single platform combines CRM, AI search, and modern UX under one role-aware product.
 
 ---
 
@@ -23,332 +27,231 @@ Real estate professionals juggle fragmented tools for listing, search, lead capt
 
 A web platform with:
 
-- AI-powered natural language property search (Google Gemini)
-- Full CRM for leads, contacts, and pipeline management
-- Property listing creation, management, and media galleries
-- Role-based dashboards (Admin, Agent, Customer)
-- Appointment scheduling and tour management
-- Notification engine, CMS, and analytics
-- Responsive design across devices
+- AI-powered natural language property search (Google Gemini **only**)
+- CRM for leads (list + detail; **non-Kanban** for MVP), notes, and basic stage workflow
+- Property listing creation, inventory, media galleries, and bulk upload
+- Role-based experiences for Guest, Customer, Agent, Admin, Super Admin
+- Appointment / visit scheduling (not virtual tours)
+- Notifications (email + in-app only), CMS, analytics / command center
+- Maps via Leaflet + OpenStreetMap
+- Responsive design across desktop, tablet, and mobile
 
 ---
 
-## 4. Technology Stack
+## 4. Technology Stack (Binding — matches Constitution §5)
 
 | Layer | Technology |
-|-------|-----------|
-| UI prototype (existing) | React 19, Vite, Express, Tailwind CSS, Lucide, Framer Motion |
-| Production frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS |
-| Production backend | Node.js, React , Express.js, Prisma ORM |
-| Database | PostgreSQL , Alembic migrations |
-| AI | Google Gemini API (`@google/genai`) |
-| State management | Zustand (frontend), React Query (server state) |
-| Auth | JWT (access + refresh tokens), bcrypt, python-jose |
+|-------|------------|
+| Production frontend | Next.js 15 (App Router), React 19, TypeScript (strict), Tailwind CSS |
+| Maps | Leaflet + OpenStreetMap |
+| Frontend deploy | Vercel |
+| Production backend | Node.js, Express.js, TypeScript, Prisma ORM |
+| Database | PostgreSQL (Prisma migrations) |
+| AI | Google Gemini API only (`@google/genai` or official Gemini SDK) |
+| Auth | Email + password; JWT access + refresh tokens; bcrypt (or equivalent) |
+| Notifications (MVP) | Email + in-app |
+| State (FE) | Zustand (client), React Query (server state) as adopted in architecture |
+
+### 4.1 Explicitly Forbidden (MVP)
+
+- Alternate LLM providers or “LLM fallback” engines  
+- FastAPI, SQLAlchemy, Alembic, python-jose (historical only — do not implement)  
+- SMS, WhatsApp, Push  
+- Module-level permission engines / permissions tables  
+- Multi-tenant / multi-organization architecture  
+- Kanban pipeline, activity timeline product, reminders/automation, virtual tours, video upload  
 
 ---
 
 ## 5. User Roles
 
+Exactly **five** roles. Authorization is **role-based only** (no module-level permission matrix).
+
 | Role | Access |
 |------|--------|
-| Super Admin | Full system — config, users, audit, all data |
-| Admin | Org-level — users, roles, CMS, reports, AI config, settings |
-| Agent | Own properties, assigned leads, tasks, tours, performance |
-| Customer | Search, favorites, inquiries, chat, loan analysis, profile |
-| Guest | Limited property browsing, public pages, registration |
+| Super Admin | Full system — users, agents, config, all org data; audit product deferred post-MVP unless separately approved |
+| Admin | Org-level — users, agents, CMS, reports, AI config, notification rules, properties, leads |
+| Agent | Own/assigned properties and leads, visit scheduling, inventory/editor as scoped; command-center subset where designed |
+| Customer | Search, favorites, inquiries, chat, loan analysis, profile, customer dashboard |
+| Guest | Public browse/search/property details, public CMS pages, registration CTAs |
 
 ---
 
-## 6. Existing Assets (Design Prototype)
+## 6. Design & Documentation Assets
 
-A fully designed and functional React application exists under `/src` with mock data and Express + Gemini AI backend (`server.ts`). This is the **design and interaction source of truth** for production UI.
+### 6.1 UI Source of Truth
 
-**Production `frontend/` status:** Designed `/src` UI has been ported into Next.js (`frontend/src/components/**`) with App Router pages and FastAPI wiring. Root `/src` remains as the design reference prototype.
+`docs/design_reference/**` (per-screen `code.html` + `screen.png`). HTML wins all UI conflicts. Kanban HTML is **Out of MVP** (reference only).
 
-### Screens already designed and implemented in `/src`:
+### 6.2 Screens in design_reference (MVP unless noted)
 
-| Category | Components |
-|----------|-----------|
-| Auth | `LoginPage` |
-| Customer | `CustomerDashboardView`, `HeroSearch`, `PropertyFilters`, `PropertyGrid`, `PropertyDetails` |
-| Admin Dashboard | `AdminDashboard`, `AdminSidebar` |
-| Admin Properties | `AdminPropertiesView`, `AdminPropertyEditor` |
-| Admin CRM | `ClientsView`, `AdminLeadDetailView`, `AddLeadModal` |
-| Admin Agents/Users | `AdminAgentsView`, `AdminUsersView` |
-| Admin Config | `AdminAIConfigView`, `AdminNotificationRulesView`, `AdminCMSView`, `AdminReportsView` |
-| AI Features | `AIChatbot`, `AILoanAnalysisModal` |
-| Scheduling | `ScheduleVisitModal` |
-| Analytics | `AnalyticsView`, `TasksView` |
-| Shared UI | `Header`, `Footer`, `Button`, `Card`, `Input`, `Form`, `Modal`, `Table`, `Layout`, `Navigation`, `Loader`, `States`, `SkeletonLoader`, `EmptySearchState`, `NotificationsDropdown` |
-| Data | `data/properties.ts`, `data/leads.ts` |
-| Types | `types.ts` (all TypeScript interfaces) |
+| Directory | Intent | MVP |
+|-----------|--------|-----|
+| `propvista_crm_homepage` | Homepage / AI search landing | Yes |
+| `search_results_standard_view` | AI search results | Yes |
+| `search_results_filter_fallback_view` | Filter fallback results | Yes |
+| `search_results_empty_state` | Zero results | Yes |
+| `property_details_premium_view` | Property details | Yes |
+| `customer_account_dashboard` | Customer dashboard | Yes |
+| `lead_detail_sarah_jenkins` | Lead detail | Yes |
+| `listing_editor_basic_info` | Listing create/edit | Yes |
+| `property_inventory_admin_view` | Property inventory | Yes |
+| `bulk_upload_validation_results` | Bulk upload results | Yes |
+| `ai_chatbot_configuration` | AI chatbot config | Yes |
+| `admin_agent_command_center` | Admin command center | Yes |
+| `lead_pipeline_kanban_view` | Lead Kanban | **No — Out of MVP** |
+| `propvista_crm` | Shell tokens (`DESIGN.md`) | Yes (tokens) |
 
-### Express AI API endpoints (prototype):
+Auth login/register and several admin surfaces (users, agents, CMS admin, notification rules, reports, lead list) are in functional scope without dedicated HTML under `design_reference/`; implement per PRD/SRS/UI guide “functional-only” specs.
 
-| Endpoint | Purpose |
-|----------|---------|
-| `POST /api/search` | NLP property search via Gemini |
-| `POST /api/chat` | Conversational AI assistant |
-| `POST /api/loan-analysis` | Mortgage affordability analysis |
-| `GET /api/health` | Health check |
+### 6.3 Canonical API (production)
 
----
-
-## 7. Build Phases
-
-### Phase 0 — Discovery & Planning ✅ COMPLETE
-
-| Deliverable | Status |
-|-------------|--------|
-| Project overview | ✅ |
-| Stakeholder analysis | ✅ |
-| UI screen inventory (from `/src`) | ✅ |
-| Route map (Next.js App Router) | ✅ |
-| Navigation flow | ✅ |
-| User role matrix | ✅ |
-| Feature inventory (150+ features cataloged) | ✅ |
-| MVP scope definition | ✅ |
-| Future scope | ✅ |
-| Dependency map | ✅ |
-| Risk register | ✅ |
-| Project glossary | ✅ |
-
-**Artifacts:** `docs/phase-0/01–12_*.md`
+Contract: `docs/openapi.yaml` / `docs/05_API_SPECIFICATION.md`.  
+Login: `POST /api/v1/auth/token` (not a separate `/auth/login` product path).  
+AI capabilities: search, chat, loan-analysis — Gemini-backed.  
+Temporary FE mocks must match OpenAPI and be removed when backend is ready (no separate approved-mock catalog).
 
 ---
 
-### Phase 1 — Project Initialization ✅ COMPLETE
+## 7. Build Phases (Target Delivery)
+
+Phases describe delivery order for the **Express + Prisma + Next.js** monorepo. Status reflects this workspace as of 2026-07-31: **documentation set complete; application packages not yet scaffolded**.
+
+### Phase 0 — Discovery & Planning ✅ COMPLETE (docs)
+
+MVP scope, roles, design inventory, epics/features, sprint/task plans, architecture, DB, OpenAPI, UI guide, test/deploy/checklists.
+
+### Phase 1 — Project Initialization 🔲 NOT STARTED
 
 | Task | Status |
 |------|--------|
-| Backend scaffold: FastAPI app with layered architecture | ✅ |
-| Frontend scaffold: Next.js 15 with App Router | ✅ |
-| Config management: pydantic-settings, `.env` | ✅ |
-| Database setup: SQLAlchemy, Alembic, session factory | ✅ |
-| CORS middleware | ✅ |
-| Makefile for common commands | ✅ |
+| Backend scaffold: Express + TypeScript + layered Clean Architecture | ❌ |
+| Frontend scaffold: Next.js 15 App Router + React 19 | ❌ |
+| Prisma + PostgreSQL setup and migrate | ❌ |
+| Config / env validation | ❌ |
+| CORS, health endpoint | ❌ |
+| Shared tokens from `DESIGN.md` | ❌ |
 
----
-
-### Phase 2 — Authentication & User Model ⚠️ PARTIAL
+### Phase 2 — Authentication & User Model 🔲 NOT STARTED
 
 | Task | Status |
 |------|--------|
-| User model (email, password_hash, is_active, soft delete) | ✅ |
-| Alembic migration: `users` table | ✅ |
-| Password hashing (bcrypt) | ✅ |
-| JWT access + refresh token helpers | ✅ |
-| `POST /auth/register` endpoint | ✅ |
-| `POST /auth/token` endpoint (login) | ✅ |
-| `POST /auth/refresh` endpoint | ✅ |
-| `get_current_user` dependency | ✅ |
-| User schema (Pydantic) | ✅ |
-| User `role` column (string: admin/customer/etc.) | ✅ |
-| Frontend auth store + AuthProvider | ✅ |
-| Frontend protected routes (`RequireAuth`) | ✅ |
-| Frontend login/register pages (Next.js) | ✅ |
-| Full RBAC roles/permissions tables + middleware | ❌ |
+| User model + `role` enum (five roles) | ❌ |
+| Password hashing + JWT access/refresh | ❌ |
+| `POST /auth/register`, `POST /auth/token`, `POST /auth/refresh` | ❌ |
+| Role middleware (role-only AuthZ — **no** permissions tables) | ❌ |
+| Frontend auth store, login/register, protected routes | ❌ |
 
----
+### Phase 3 — Database Schema 🔲 NOT STARTED
 
-### Phase 3 — Database Schema Expansion ✅ COMPLETE
+Implement schema per `docs/04_DATABASE_DESIGN_DOCUMENT.md` (users, refresh_tokens, agents, properties, amenities, landmarks, images, favorites, customer_profiles, leads, lead_notes, visit_requests, notifications, notification_rules, cms_pages, ai_configs, bulk upload tables, saved_searches, metrics snapshots, property_view_events).
 
-| Task | Status |
-|------|--------|
-| Property model (title, price, address, beds, baths, sqft, type, agent FK) | ✅ |
-| Agent model (name, email, phone, profile image) | ✅ |
-| PropertyAmenity model | ✅ |
-| NearbyLandmark model | ✅ |
-| PropertyImage model | ✅ |
-| Lead, Favorite, Notification, CMS page models | ✅ |
-| Alembic migration: `000000000002` (+ later schema updates) | ✅ |
+### Phase 4 — Service & Repository Layer 🔲 NOT STARTED
 
-**Tables (core):** `users`, `agents`, `properties`, `property_amenities`, `nearby_landmarks`, `property_images`, `leads`, `favorites`, plus notifications/CMS as migrated
+Repositories + application services; no business logic in Express controllers or React components.
 
----
+### Phase 5 — API Endpoints 🔲 NOT STARTED
 
-### Phase 4 — Service & Repository Layer ✅ COMPLETE
+Implement OpenAPI operations: Auth, Users, Agents, Properties/Media, Search/AI, Favorites, Customer, Leads, Visits, Notifications, CMS, Metrics, AI Config, Bulk, Health.
 
-| Task | Status |
-|------|--------|
-| BaseRepository (generic CRUD) | ✅ |
-| PropertyRepository, AgentRepository, AmenityRepo, LandmarkRepo, ImageRepo | ✅ |
-| BaseService (generic CRUD) | ✅ |
-| PropertyService, AgentService, AmenityService, LandmarkService, ImageService | ✅ |
-| Pydantic schemas for all models | ✅ |
-| `__init__.py` exports | ✅ |
+### Phase 6 — Frontend (design fidelity) 🔲 NOT STARTED
 
----
+Pixel-faithful implementation of MVP `design_reference` screens + functional-only admin/auth screens; centralized API client; loading/empty/error/success states.
 
-### Phase 5 — API Endpoints ⚠️ PARTIAL
+### Phase 7 — AI Integration 🔲 NOT STARTED
 
-| Task | Status |
-|------|--------|
-| Auth router (`/auth`) | ✅ |
-| Property CRUD router (`/properties`) | ✅ |
-| Agent CRUD router (`/agents`) | ✅ |
-| PropertyAmenity router (`/property-amenities`) | ✅ |
-| NearbyLandmark router (`/nearby-landmarks`) | ✅ |
-| PropertyImage router (`/property-images`) | ✅ |
-| API router aggregation (`api/v1/api.py`) | ✅ |
-| Lead endpoints (`/leads`) | ✅ |
-| Property search/filter query params | ✅ |
-| Favorites endpoints (`/favorites`) | ✅ |
-| AI endpoints (`/ai/search`, `/ai/chat`) | ✅ |
-| Notifications endpoints | ✅ |
-| Users admin endpoints | ✅ |
-| CMS endpoints (`/cms/pages`, public `/pages`) | ✅ |
-| Health / admin stats endpoints | ✅ |
-| Loan-analysis AI endpoint | ✅ |
-| Pagination, sorting, error handling polish | ⚠️ Partial |
+Gemini client (server-only); NLP search with filter fallback; chat; loan analysis; AI config admin.
 
----
+### Phase 8 — Lead & CRM (MVP) 🔲 NOT STARTED
 
-### Phase 6 — Frontend Migration ✅ MOSTLY COMPLETE (design port)
+Lead capture, list (`/admin/leads`), detail, notes, stage updates, visit scheduling.  
+**Contact management beyond leads = post-MVP** (not CRM-004 MVP).  
+**Kanban = Out of MVP.**
 
-Designed `/src` components ported into `frontend/` Next.js App Router with FastAPI wiring via `lib/api.ts` + `lib/mappers.ts`. Root `/src` remains as design reference.
+### Phase 9 — Admin & Platform 🔲 NOT STARTED
 
-| Task | Status |
-|------|--------|
-| App layout (header, footer, sidebar) | ✅ SiteHeader/SiteFooter + designed AdminSidebar (Next Link) |
-| Auth pages (login, register) + auth context | ✅ Designed LoginPage wired to JWT auth store |
-| Customer: property search, grid, details | ✅ HeroSearch, PropertyFilters, PropertyGrid, PropertyDetails |
-| Customer: dashboard, favorites | ✅ CustomerDashboardView + favorites API |
-| Admin: dashboard, sidebar navigation | ✅ AdminDashboard + Link-based AdminSidebar |
-| Admin: properties list + editor | ✅ AdminPropertiesView + AdminPropertyEditor (API) |
-| Admin: leads/clients pipeline + detail | ✅ ClientsView, AddLeadModal, AdminLeadDetailView |
-| Admin: agents management | ✅ AdminAgentsView (designed UI) |
-| Admin: users management | ✅ AdminUsersView (designed UI) |
-| Admin: AI config | ✅ AdminAIConfigView |
-| Admin: CMS | ✅ AdminCMSView |
-| Admin: reports | ✅ AdminReportsView |
-| Admin: notifications | ✅ AdminNotificationRulesView + API notification dropdown |
-| Home / marketing landing | ✅ HeroSearch landing |
-| Shared UI components (Button, Card, Modal, Table, etc.) | ✅ `frontend/src/components/ui` |
-| API integration | ✅ Properties, favorites, leads, AI; some admin screens local-state |
-| Loading states / skeleton loaders | ✅ SkeletonLoader ported |
-| Dark/light mode | ❌ |
-| Responsive QA vs `/src` | ⚠️ Pending formal QA |
-
----
-
-### Phase 7 — AI Integration ✅ MOSTLY COMPLETE
-
-| Task | Status |
-|------|--------|
-| Gemini client setup in FastAPI | ✅ |
-| `POST /api/v1/ai/search` — NLP property search | ✅ |
-| `POST /api/v1/ai/chat` — Conversational assistant | ✅ |
-| `POST /api/v1/ai/loan-analysis` — Mortgage analysis | ✅ (+ formula fallback) |
-| Frontend: AI chatbot component | ✅ Wired to FastAPI |
-| Frontend: AI search (HeroSearch) | ✅ |
-| Frontend: loan analysis modal | ✅ Wired to FastAPI |
-
----
-
-### Phase 8 — Lead & CRM Features ⚠️ PARTIAL
-
-| Task | Status |
-|------|--------|
-| Lead model + migration | ✅ |
-| Lead CRUD endpoints | ✅ |
-| Lead capture form (property pages) | ✅ |
-| Lead pipeline/list view (admin) | ✅ ClientsView + API |
-| Lead detail view | ✅ AdminLeadDetailView |
-| Contact management | ❌ |
-| Basic lead status workflow | ✅ Via ClientsView + `apiUpdateLead` |
-| Notification on new lead | ⚠️ Notifications API; rules engine is local UI |
-
----
-
-### Phase 9 — Admin & Platform Features ⚠️ PARTIAL
-
-| Task | Status |
-|------|--------|
-| RBAC: roles table, permission checks, middleware | ⚠️ Role string on user only |
-| User management UI | ✅ Designed AdminUsersView |
-| Notification rules engine | ⚠️ Designed UI (local state) |
-| Basic CMS | ✅ Designed AdminCMSView + public CMS pages |
-| System health dashboard | ⚠️ AdminDashboard KPIs (designed) |
-| Analytics/reports views | ✅ AdminReportsView |
-| Appointment/tour scheduling | ✅ ScheduleVisitModal (local confirm) |
-
----
+Users, agents, CMS, notification rules (email + in-app), reports/command center, maps (Leaflet/OSM). Role checks only — no permissions engine.
 
 ### Phase 10 — Testing, QA & Deployment 🔲 NOT STARTED
 
-| Task | Status |
-|------|--------|
-| Backend unit tests (pytest) | ❌ |
-| Frontend tests (Vitest + React Testing Library) | ❌ |
-| API integration tests | ❌ |
-| RBAC permission tests | ❌ |
-| Security audit (OWASP basics) | ❌ |
-| Performance benchmarks (<2s page load) | ❌ |
-| CI/CD pipeline (GitHub Actions) | ❌ |
-| Staging deployment | ❌ |
-| Production deployment docs | ❌ |
-| Monitoring & error tracking | ❌ |
+Unit, integration, API, UI, E2E per `11_TEST_STRATEGY.md`; CI; Vercel FE; Postgres + backend deploy; seed data for demo.
 
 ---
 
 ## 8. MVP Feature Matrix
 
-Features required for MVP launch, mapped to build phases:
-
 | Feature ID | Feature | Phase | Status |
 |------------|---------|-------|--------|
-| AUTH-001 | Email/password registration | 2 | ✅ |
-| AUTH-002 | Login/logout (JWT) | 2 | ✅ |
-| AUTH-005 | Basic RBAC (admin/user) | 9 | ⚠️ Role string only |
-| PROP-001 | Property listing creation | 5+6 | ⚠️ API + simplified editor UI |
-| PROP-002 | Property search with filters | 5+6 | ⚠️ API + simplified search UI (not `/src` design) |
-| PROP-003 | Property details view | 6 | ⚠️ API-backed simplified view |
-| PROP-005 | Property favorites | 5+6 | ⚠️ API + basic favorites page |
-| AI-001 | Natural language search | 7 | ⚠️ Backend + basic AISearchBar |
-| AI-002 | AI chatbot | 7 | ⚠️ Backend + basic chatbot |
-| CRM-001 | Lead capture form | 8 | ✅ |
-| CRM-002 | Lead list view | 8 | ⚠️ Basic list (not `/src` pipeline design) |
-| CRM-004 | Contact management | 8 | ❌ |
-| ADM-001 | User management | 9 | ⚠️ Basic UI |
-| ADM-004 | Notification system | 9 | ⚠️ Basic list; no rules engine |
-| ADM-005 | Basic CMS | 9 | ⚠️ API + admin/public pages |
-| ADM-013 | System health dashboard | 9 | ⚠️ Admin stats snapshot |
+| AUTH-001 | Email/password registration | 2 | ❌ |
+| AUTH-002 | Login/logout (JWT access + refresh) | 2 | ❌ |
+| AUTH-005 | Role-based AuthZ (five roles; no permissions tables) | 2+9 | ❌ |
+| PROP-001 | Property listing creation / editor | 5+6 | ❌ |
+| PROP-002 | Property search (filters + AI NLP) | 5+6+7 | ❌ |
+| PROP-003 | Property details view | 6 | ❌ |
+| PROP-005 | Property favorites | 5+6 | ❌ |
+| PROP-BULK | Bulk upload validate/import | 5+6 | ❌ |
+| AI-001 | Natural language search (Gemini) | 7 | ❌ |
+| AI-002 | AI chatbot (Gemini) | 7 | ❌ |
+| AI-003 | Loan analysis (Gemini + safe formula fallback) | 7 | ❌ |
+| AI-004 | AI chatbot configuration (admin) | 9 | ❌ |
+| CRM-001 | Lead capture forms | 8 | ❌ |
+| CRM-002 | Lead list view (non-Kanban) | 8 | ❌ |
+| CRM-003 | Lead detail + notes + stage | 8 | ❌ |
+| CRM-005 | Visit / tour scheduling | 8 | ❌ |
+| ADM-001 | User management | 9 | ❌ |
+| ADM-002 | Agent management | 9 | ❌ |
+| ADM-004 | Notifications (email + in-app) + rules UI | 9 | ❌ |
+| ADM-005 | Basic CMS | 9 | ❌ |
+| ADM-013 | Command center / metrics dashboard | 9 | ❌ |
+| ADM-014 | Reports views | 9 | ❌ |
+| MAP-001 | Leaflet + OSM maps on designed surfaces | 6+9 | ❌ |
+| PLT-001 | Health + deploy + seed demo data | 1+10 | ❌ |
+
+### 8.1 Explicitly Out of MVP (do not ship)
+
+| ID | Item |
+|----|------|
+| CRM-004 | Contact management beyond leads → **post-MVP** |
+| — | Kanban pipeline UI |
+| — | Activity timeline product |
+| — | Reminders / automation engines |
+| — | Virtual tours / video upload |
+| — | SMS / WhatsApp / Push |
+| — | Alternate LLM / LLM fallback |
+| — | Multi-org / permissions tables |
 
 ---
 
 ## 9. Phase Timeline (Estimated)
 
 | Phase | Duration | Depends on |
-|-------|----------|-----------|
-| 0 — Discovery | ✅ Done | — |
-| 1 — Initialization | ✅ Done | — |
-| 2 — Auth | ⚠️ Mostly done; finish full RBAC | Phase 1 |
-| 3 — Schema | ✅ Done | Phase 1 |
-| 4 — Services | ✅ Done | Phase 3 |
-| 5 — API endpoints | ⚠️ Mostly done; polish + loan-analysis | Phase 4 |
-| 6 — Frontend migration | ✅ Design port done; polish remaining | Phase 2, 5 |
-| 7 — AI integration | ✅ Mostly done | Phase 5, 6 |
-| 8 — Lead/CRM | ⚠️ Partial polish | Phase 5, 6 |
-| 9 — Admin features | ⚠️ Partial (RBAC depth) | Phase 2, 6 |
-| 10 — Testing & deploy | 🔲 Not started (1–2 weeks) | All above |
+|-------|----------|------------|
+| 0 — Discovery (docs) | ✅ Done | — |
+| 1 — Initialization | Sprint 0 | Docs freeze + repo scaffold |
+| 2 — Auth | 1 sprint | Phase 1 |
+| 3 — Schema | Overlaps Sprint 0–1 | Phase 1 |
+| 4 — Services | Ongoing with APIs | Phase 3 |
+| 5 — API | Sprints per `09_SPRINT_PLAN.md` | Phase 4 |
+| 6 — Frontend fidelity | Parallel with APIs | Phase 2, design_reference |
+| 7 — AI | Mid sprints | Phase 5 Gemini keys |
+| 8 — CRM leads | Mid sprints | Phase 5–6 |
+| 9 — Admin platform | Mid–late sprints | Phase 2, 6 |
+| 10 — Test & deploy | Continuous + final | All above |
 
-**Primary remaining gap:** formal QA, deeper API sync for agents/users/CMS demo screens, full RBAC, Phase 10 tests.
-
-**Estimated total remaining: 2–4 weeks**
+Detailed schedule: `docs/09_SPRINT_PLAN.md`, tasks: `docs/10_TASK_BREAKDOWN.md`.
 
 ---
 
 ## 10. Post-MVP Roadmap
 
-| Release | Focus | Timeline |
-|---------|-------|----------|
-| 1.1 | Enhanced property features (comparison, bulk ops, import/export, geolocation) | Months 3–4 |
-| 1.2 | AI power-ups (lead scoring, recommendations, smart descriptions, image enhancement) | Months 3–4 |
-| 1.3 | CRM enhancements (scoring engine, activity timeline, scheduling, messaging, segmentation) | Months 5–6 |
-| 1.4 | Marketing (email campaigns, SMS, social sharing, landing pages, drip campaigns) | Months 5–6 |
-| 2.0 | Transactions (offers, escrow, documents, e-signature, closing) | Months 7+ |
-| 2.x | Financial management, multi-tenancy, PWA/mobile, localization | Months 9+ |
+| Release | Focus |
+|---------|-------|
+| 1.1 | Kanban pipeline (activate HTML), enhanced geo/compare |
+| 1.2 | AI power-ups (lead scoring, recommendations, smart descriptions) |
+| 1.3 | CRM: contact management (former CRM-004), activity timeline, reminders/automation |
+| 1.4 | Marketing: SMS/WhatsApp/push (channels), campaigns |
+| 2.0 | Transactions, documents, e-signature |
+| 2.x | Multi-tenancy, PWA/mobile, localization |
 
 ---
 
@@ -356,26 +259,28 @@ Features required for MVP launch, mapped to build phases:
 
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
-| AI search quality insufficient | High | Medium | Prompt engineering, template fallbacks, user feedback loop |
-| Scope creep before MVP | High | High | Strict phase adherence, this SOT doc as gate |
-| Frontend migration takes longer than estimated | Medium | Medium | Reuse `/src` components directly, incremental migration |
-| User adoption resistance | Medium | Medium | Focus on lead capture pain point, agent onboarding |
-| Gemini API cost/availability | Low | Low | Usage monitoring, alternative LLM fallback |
-| Data quality with empty DB | Medium | High | Seed scripts, CSV import early, mock data for demo |
+| AI search quality insufficient | High | Medium | Prompt engineering, **filter-only fallback** (not alternate LLM), user feedback |
+| Scope creep before MVP | High | High | Constitution MVP exclusions + this matrix as gate |
+| Pixel fidelity vs HTML | High | Medium | UI guide + pixel checklist; no redesign |
+| Gemini API cost/availability | Medium | Low | Usage monitoring, graceful filter fallback, rate limits |
+| Empty DB for demos | Medium | High | Prisma seed scripts per DB design |
+| Docs vs empty monorepo | High | Certain until Sprint 0 | Scaffold only after docs freeze + Q2 approval |
 
 ---
 
 ## 12. Success Criteria (MVP)
 
-- **Performance:** <2s average page load
-- **Uptime:** 99.5%+
-- **Security:** No critical vulnerabilities, JWT validated, inputs sanitized
-- **Coverage:** >80% unit test coverage on core business logic
-- **User flows validated:**
-  - Agent creates property → published
-  - Buyer searches (text + NLP) → views details → submits inquiry
-  - Agent views/manages leads
-  - Admin manages users, views notifications
+- **Performance:** <2s average page load (target)  
+- **Uptime:** 99.5%+  
+- **Security:** No critical vulnerabilities; JWT validated; inputs sanitized; role checks on every protected API  
+- **Coverage:** Per `11_TEST_STRATEGY.md` gates  
+- **Fidelity:** Visually indistinguishable from in-scope HTML  
+- **User flows validated:**  
+  - Agent/Admin creates property → published  
+  - Guest/Customer searches (filters + NLP) → details → inquiry  
+  - Agent manages leads (list + detail)  
+  - Admin manages users/agents, CMS, AI config, notifications (email + in-app)  
+  - Maps render via Leaflet/OSM where designed  
 
 ---
 
@@ -383,18 +288,21 @@ Features required for MVP launch, mapped to build phases:
 
 | Document | Location |
 |----------|----------|
-| Project overview | `docs/phase-0/01_PROJECT_OVERVIEW.md` |
-| Stakeholder analysis | `docs/phase-0/02_STAKEHOLDER_ANALYSIS.md` |
-| UI screen inventory | `docs/phase-0/03_UI_SCREEN_INVENTORY.md` |
-| Route map | `docs/phase-0/04_ROUTE_MAP.md` |
-| Navigation flow | `docs/phase-0/05_NAVIGATION_FLOW.md` |
-| User role matrix | `docs/phase-0/06_USER_ROLE_MATRIX.md` |
-| Feature inventory | `docs/phase-0/07_FEATURE_INVENTORY.md` |
-| MVP scope | `docs/phase-0/08_MVP_SCOPE.md` |
-| Future scope | `docs/phase-0/09_FUTURE_SCOPE.md` |
-| Dependency map | `docs/phase-0/10_DEPENDENCY_MAP.md` |
-| Risk register | `docs/phase-0/11_RISK_REGISTER.md` |
-| Project glossary | `docs/phase-0/12_PROJECT_GLOSSARY.md` |
-| UI prototype | `/src` (Vite + React + Express) — **design SOT** |
-| Backend app | `backend/app/` (FastAPI) |
-| Frontend app | `frontend/` (Next.js 15) — partial migration; many shells |
+| Project Constitution | `docs/00_PROJECT_CONSTITUTION.md` |
+| PRD | `docs/01_PRODUCT_REQUIREMENTS_DOCUMENT.md` |
+| SRS | `docs/02_SOFTWARE_REQUIREMENTS_SPECIFICATION.md` |
+| System Architecture | `docs/03_SYSTEM_ARCHITECTURE_DOCUMENT.md` |
+| Database Design | `docs/04_DATABASE_DESIGN_DOCUMENT.md` |
+| API Specification | `docs/05_API_SPECIFICATION.md` + `docs/openapi.yaml` |
+| Frontend Architecture | `docs/06_FRONTEND_ARCHITECTURE.md` |
+| UI Implementation Guide | `docs/07_UI_IMPLEMENTATION_GUIDE.md` |
+| Epics & Features | `docs/08_EPICS_AND_FEATURES.md` |
+| Sprint Plan | `docs/09_SPRINT_PLAN.md` |
+| Task Breakdown | `docs/10_TASK_BREAKDOWN.md` |
+| Test Strategy | `docs/11_TEST_STRATEGY.md` |
+| Deployment Guide | `docs/12_DEPLOYMENT_GUIDE.md` |
+| AI Development Rules | `docs/13_AI_DEVELOPMENT_RULES.md` |
+| Coding Standards | `docs/14_CODING_STANDARDS.md` |
+| UI SOT | `docs/design_reference/**` |
+
+**Superseded:** Any prior FastAPI / Alembic / python-jose / alternate-LLM wording in older revisions of this file is void. Use Constitution §5 and this v2.0.0 text.

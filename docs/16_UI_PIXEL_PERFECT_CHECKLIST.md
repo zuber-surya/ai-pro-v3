@@ -81,6 +81,7 @@ A screen is **Screen Complete** only when **all** are true:
 - [ ] Loading + skeletons match  
 - [ ] Empty states match  
 - [ ] Error states + form validation UX match  
+- [ ] Success / ready states match (post-load content; post-submit toast only if HTML shows)  
 - [ ] Animations / transitions match  
 
 ### 4.3 Engineering gates (Constitution §7.2)
@@ -424,6 +425,17 @@ Mark each item ☐ Pass / ☐ Fail / ☐ N/A. **Fail or skipped required item = 
 | ER4 | SCR-SEARCH-FB fallback banner + filter results match | ☐ |
 | ER5 | API failure does not produce undesigned blank page | ☐ |
 | ER6 | Map failure does not break surrounding layout | ☐ |
+
+---
+
+## 26A. Success States
+
+| # | Check | Pass |
+|---|-------|------|
+| SU1 | After successful load, screen shows designed ready content (not stuck on skeleton) | ☐ |
+| SU2 | After successful submit, designed confirmation/toast/redirect matches HTML or functional spec | ☐ |
+| SU3 | Success ≠ empty and success ≠ error in state machine | ☐ |
+| SU4 | Search AI success path renders SCR-SEARCH-STD (not fallback) when API succeeds with results | ☐ |
 
 ---
 

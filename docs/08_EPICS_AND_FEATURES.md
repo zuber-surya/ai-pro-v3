@@ -157,7 +157,7 @@ Per Constitution: Kanban; activity timeline product; reminder system; automation
 | **Dependencies** | FEAT-00-03 |
 | **Estimated Complexity** | M |
 | **HTML / Screens** | Login/register (Requirements) |
-| **APIs** | POST /auth/register, POST /auth/login |
+| **APIs** | POST /auth/register, POST /auth/token (login) |
 
 **Acceptance Criteria**
 - [ ] User can register with email/password
@@ -1320,6 +1320,49 @@ Every feature above includes Description, Priority, Dependencies, Acceptance Cri
 | Version | Date | Notes |
 |---------|------|-------|
 | 1.0.0 | 2026-07-30 | Full Epic → Feature → Story backlog per Constitution |
+| 1.1.0 | 2026-07-31 | Auth path `/auth/token`; FEAT→FR index (§8) |
+
+## 8. FEAT → FR Traceability Index (MVP)
+
+| Feature | Primary FR IDs | Sprint | Tasks |
+|---------|----------------|--------|-------|
+| FEAT-00-01 | NFR / stack (no product FR) | 0 | `10` index |
+| FEAT-00-02 | NFR-UI / tokens | 0 | `10` index |
+| FEAT-00-03 | FR-AUTH-003 (shell) | 0 | `10` index |
+| FEAT-01-01 | FR-AUTH-001, FR-AUTH-002, FR-AUTH-007 | 1 | `10` index |
+| FEAT-01-02 | FR-AUTH-002, FR-AUTH-003, FR-AUTH-004 | 1 | `10` index |
+| FEAT-02-01 | FR-AUTH-005 | 2 | `10` index |
+| FEAT-02-02 | FR-AUTH-006 | 2 | `10` index |
+| FEAT-03-01 | FR-HOME-001–005, FR-HOME-007 | 6 | `10` index |
+| FEAT-03-02 | FR-HOME-006, FR-CRM-001 | 6 | `10` index |
+| FEAT-04-01 | FR-SEARCH-001–005, FR-SEARCH-011 | 5 | `10` index |
+| FEAT-04-02 | FR-SEARCH-003–010 | 5 | `10` index |
+| FEAT-04-03 | FR-SEARCH-011–013 | 5 | `10` index |
+| FEAT-05-01 | FR-PROP-D-001–008, FR-PROP-D-010–011 | 4 | `10` index |
+| FEAT-05-02 | FR-PROP-D-009; FR-CRM-001; visit FRs | 4 | `10` index |
+| FEAT-06-01 | FR-SEARCH-010, FR-PROP-D-009, FR-CUS-002 | 8 | `10` index |
+| FEAT-06-02 | FR-CUS-005 (saved searches) | 8 | `10` index |
+| FEAT-07-01 | FR-PROP-M inventory FRs | 3 | `10` index |
+| FEAT-07-02 | FR-PROP-M editor FRs | 3 | `10` index |
+| FEAT-07-03 | FR-PROP-M media (photos/floorplan; no video) | 3 | `10` index |
+| FEAT-08-01 | FR-BULK-001–006 | 11 | `10` index |
+| FEAT-09-01 | FR-CRM-001–004 (capture + list) | 7 | `10` index |
+| FEAT-09-02 | FR-CRM-005–010 (detail/notes/stage; no Kanban/timeline) | 7 | `10` index |
+| FEAT-10-01 | FR-CRM-009 (schedule visit) | 7 | `10` index |
+| FEAT-11-01 | FR-CUS-001–006 | 8 | `10` index |
+| FEAT-12-01 | FR-AI chat FRs / FR-HOME-005 | 9 | `10` index |
+| FEAT-12-02 | FR-AI loan analysis | 9 | `10` index |
+| FEAT-13-01 | FR-AI-002–006 (config) | 9 | `10` index |
+| FEAT-14-01 | FR-PLT-001–002 (in-app) | 10 | `10` index |
+| FEAT-14-02 | FR-PLT-003 (email + rules) | 10 | `10` index |
+| FEAT-15-01 | FR-PLT-004, FR-HOME-007 | 10 | `10` index |
+| FEAT-16-01 | FR-ADM command center | 12 | `10` index |
+| FEAT-16-02 | FR-ADM reports | 12 | `10` index |
+| FEAT-17-01 | Map / landmark FRs (Leaflet+OSM) | 4 | `10` index |
+| FEAT-18-01 | FR-UX states / a11y | 13 | `10` index |
+| FEAT-18-02 | Health / deploy gates | 13 | `10` index |
+
+Epic-level FR ranges remain in each EPIC “In scope” block. Sprint assignment: `09_SPRINT_PLAN.md`. Task IDs: `10_TASK_BREAKDOWN.md` §4.
 
 ---
 

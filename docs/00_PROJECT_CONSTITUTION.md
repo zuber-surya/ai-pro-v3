@@ -1180,8 +1180,14 @@ Exact status tables in `REQUIREMENTS_AND_PROPOSAL.md` track delivery progress; t
 | System-wide config / audit | No | No | No | No | Yes |
 
 \* “Limited” means only as Requirements and designed Agent surfaces allow—never by inventing a permission matrix.  
+**Canonical Limited definitions (binding):**  
+- **Favorites (Agent):** Agent may use save controls on public/search/detail surfaces for personal workflow; Agent does **not** get Customer dashboard favorites management as primary UX.  
+- **Property inventory (Agent):** Agent sees **own/assigned** listings only (not full org inventory unless Admin/Super Admin).  
+- **Admin command center (Agent):** Agent sees the **designed Agent subset** of KPIs/activity on SCR-CMD; full org reports remain Admin/Super Admin.  
 † Guest lead capture where HTML/Requirements provide public forms.  
 ‡ Guest chat only where the public HTML includes the widget.
+
+**Canonical RBAC note:** This Appendix A.1 matrix is authoritative for MVP. SRS Appendix O and PRD §7 must match it (including Super Admin **Yes** on Customer dashboard for support/impersonation-style access via product UI where implemented—server still enforces role). Agent inventory/favorites/command-center cells marked **Y** in operation matrices mean the Limited\* scope above, not org-wide Admin powers.
 
 Server-side enforcement is mandatory. UI hiding is not security.
 

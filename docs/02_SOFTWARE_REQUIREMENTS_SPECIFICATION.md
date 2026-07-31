@@ -5603,6 +5603,7 @@ Forbidden in client env: any Gemini key, SMTP password, JWT secrets.
 
 ## Appendix O -- Full RBAC Operations Matrix
 
+Canonical definitions for Agent **Limited** cells and Super Admin customer-dashboard access: Constitution Appendix A.1. Cells marked Y for Agent on favorites / inventory / command center mean that Limited scope—not org-wide Admin.
 
 | Operation | Guest | Customer | Agent | Admin | Super Admin |
 | --- | --- | --- | --- | --- | --- |
@@ -5610,7 +5611,7 @@ Forbidden in client env: any Gemini key, SMTP password, JWT secrets.
 | Register/login | Y | Y | Y | Y | Y |
 | AI search/chat (guest) | Y | Y | Y | Y | Y |
 | Save favorite | N | Y | Y | Y | Y |
-| Customer dashboard | N | Y | N | N | N |
+| Customer dashboard | N | Y | N | N | Y |
 | Loan analysis | N | Y | Y | Y | Y |
 | Create property draft | N | N | Y | Y | Y |
 | Publish property | N | N | Y | Y | Y |

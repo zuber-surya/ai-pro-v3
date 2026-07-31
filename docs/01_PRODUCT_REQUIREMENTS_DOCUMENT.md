@@ -258,8 +258,8 @@ Single organization. **Role-based only. No module-level permissions.**
 | System-wide config / audit | - | - | - | - | Yes |
 | Kanban pipeline | - | - | Future | Future | Future |
 
-* Limited = only where Requirements and designed Agent surfaces allow.
-** Super Admin may access all data; customer dashboard is a Customer-facing surface.
+* Limited = Constitution Appendix A.1 canonical definitions (Agent favorites/inventory/command-center subset — not org-wide Admin).
+** Super Admin **Yes** on Customer dashboard matches Constitution A.1 (support access); canonical RBAC = Constitution A.1 / SRS Appendix O (synced).
 
 ### 7.3 Authorization Rules
 
@@ -316,6 +316,16 @@ Login (Admin / Super Admin)
   -> Notification rules
   -> Reports
   -> Bulk upload -> Validation results -> Import valid rows
+```
+
+### 8.4a Super Admin Journey (distinct from Admin)
+
+```
+Login (Super Admin)
+  -> All Admin journeys (8.4) with full org data access
+  -> Customer dashboard access when needed for support (Constitution A.1 Yes)
+  -> System-wide config surfaces in MVP admin tools (users/agents/AI/CMS/rules)
+  -> Full immutable audit ledger = Future (SRS Appendix R); not a separate MVP product screen
 ```
 
 ### 8.5 AI Failure Journey (Mandatory UX)
