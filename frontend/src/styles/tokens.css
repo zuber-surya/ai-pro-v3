@@ -1,2 +1,76 @@
-/* Map DESIGN.md tokens here in FEAT-00-02 */
+/**
+ * PropVista design tokens — DESIGN.md + HTML screen Tailwind config.
+ * HTML wins for class values used in design_reference screens.
+ */
 
+:root {
+  --pv-surface: #faf8ff;
+  --pv-surface-dim: #d9d9e4;
+  --pv-surface-bright: #faf8ff;
+  --pv-surface-container-lowest: #ffffff;
+  --pv-surface-container-low: #f3f3fd;
+  --pv-surface-container: #ededf8;
+  --pv-surface-container-high: #e7e7f2;
+  --pv-surface-container-highest: #e1e2ec;
+  --pv-on-surface: #191b23;
+  --pv-on-surface-variant: #434654;
+  --pv-inverse-surface: #2e3038;
+  --pv-inverse-on-surface: #f0f0fb;
+  --pv-outline: #737685;
+  --pv-outline-variant: #c3c6d6;
+  --pv-surface-tint: #0c56d0;
+  --pv-primary: #003d9b;
+  --pv-on-primary: #ffffff;
+  --pv-primary-container: #0052cc;
+  --pv-on-primary-container: #c4d2ff;
+  --pv-inverse-primary: #b2c5ff;
+  --pv-secondary: #873da6;
+  --pv-on-secondary: #ffffff;
+  --pv-secondary-container: #de8ffd;
+  --pv-on-secondary-container: #661a86;
+  --pv-tertiary: #7b2600;
+  --pv-on-tertiary: #ffffff;
+  --pv-tertiary-container: #a33500;
+  --pv-on-tertiary-container: #ffc6b2;
+  --pv-error: #ba1a1a;
+  --pv-on-error: #ffffff;
+  --pv-error-container: #ffdad6;
+  --pv-on-error-container: #93000a;
+  --pv-primary-fixed: #dae2ff;
+  --pv-primary-fixed-dim: #b2c5ff;
+  --pv-on-primary-fixed: #001848;
+  --pv-on-primary-fixed-variant: #0040a2;
+  --pv-secondary-fixed: #f8d8ff;
+  --pv-secondary-fixed-dim: #ecb2ff;
+  --pv-on-secondary-fixed: #320047;
+  --pv-on-secondary-fixed-variant: #6c228c;
+  --pv-tertiary-fixed: #ffdbcf;
+  --pv-tertiary-fixed-dim: #ffb59b;
+  --pv-on-tertiary-fixed: #380d00;
+  --pv-on-tertiary-fixed-variant: #812800;
+  --pv-background: #faf8ff;
+  --pv-on-background: #191b23;
+  --pv-surface-variant: #e1e2ec;
+  --pv-ai-accent: #8e44ad;
+  --pv-border-subtle: #e5e5ea;
+
+  --pv-shadow-level-1: 0px 2px 4px rgba(0, 0, 0, 0.05);
+  --pv-shadow-level-2: 0px 12px 24px rgba(0, 0, 0, 0.1);
+
+  --pv-radius-default: 0.25rem;
+  --pv-radius-lg: 10px;
+  --pv-radius-xl: 12px;
+  --pv-radius-full: 9999px;
+  --pv-radius-card: 10px;
+  --pv-radius-control: 0.5rem;
+
+  --pv-space-xs: 4px;
+  --pv-space-base: 8px;
+  --pv-space-sm: 12px;
+  --pv-space-md: 16px;
+  --pv-space-lg: 24px;
+  --pv-space-xl: 40px;
+  --pv-space-gutter: 24px;
+  --pv-space-margin-mobile: 16px;
+  --pv-space-container-max: 1440px;
+}

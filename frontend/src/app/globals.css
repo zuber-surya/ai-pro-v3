@@ -1,26 +1,145 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "../styles/tokens.css";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-body-sm: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-body-md: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-body-lg: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-headline-md: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-headline-lg: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-headline-lg-mobile: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-label-md: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-label-sm: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display-lg: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-surface: var(--pv-surface);
+  --color-surface-dim: var(--pv-surface-dim);
+  --color-surface-bright: var(--pv-surface-bright);
+  --color-surface-container-lowest: var(--pv-surface-container-lowest);
+  --color-surface-container-low: var(--pv-surface-container-low);
+  --color-surface-container: var(--pv-surface-container);
+  --color-surface-container-high: var(--pv-surface-container-high);
+  --color-surface-container-highest: var(--pv-surface-container-highest);
+  --color-on-surface: var(--pv-on-surface);
+  --color-on-surface-variant: var(--pv-on-surface-variant);
+  --color-inverse-surface: var(--pv-inverse-surface);
+  --color-inverse-on-surface: var(--pv-inverse-on-surface);
+  --color-outline: var(--pv-outline);
+  --color-outline-variant: var(--pv-outline-variant);
+  --color-surface-tint: var(--pv-surface-tint);
+  --color-primary: var(--pv-primary);
+  --color-on-primary: var(--pv-on-primary);
+  --color-primary-container: var(--pv-primary-container);
+  --color-on-primary-container: var(--pv-on-primary-container);
+  --color-inverse-primary: var(--pv-inverse-primary);
+  --color-secondary: var(--pv-secondary);
+  --color-on-secondary: var(--pv-on-secondary);
+  --color-secondary-container: var(--pv-secondary-container);
+  --color-on-secondary-container: var(--pv-on-secondary-container);
+  --color-tertiary: var(--pv-tertiary);
+  --color-on-tertiary: var(--pv-on-tertiary);
+  --color-tertiary-container: var(--pv-tertiary-container);
+  --color-on-tertiary-container: var(--pv-on-tertiary-container);
+  --color-error: var(--pv-error);
+  --color-on-error: var(--pv-on-error);
+  --color-error-container: var(--pv-error-container);
+  --color-on-error-container: var(--pv-on-error-container);
+  --color-primary-fixed: var(--pv-primary-fixed);
+  --color-primary-fixed-dim: var(--pv-primary-fixed-dim);
+  --color-on-primary-fixed: var(--pv-on-primary-fixed);
+  --color-on-primary-fixed-variant: var(--pv-on-primary-fixed-variant);
+  --color-secondary-fixed: var(--pv-secondary-fixed);
+  --color-secondary-fixed-dim: var(--pv-secondary-fixed-dim);
+  --color-on-secondary-fixed: var(--pv-on-secondary-fixed);
+  --color-on-secondary-fixed-variant: var(--pv-on-secondary-fixed-variant);
+  --color-tertiary-fixed: var(--pv-tertiary-fixed);
+  --color-tertiary-fixed-dim: var(--pv-tertiary-fixed-dim);
+  --color-on-tertiary-fixed: var(--pv-on-tertiary-fixed);
+  --color-on-tertiary-fixed-variant: var(--pv-on-tertiary-fixed-variant);
+  --color-background: var(--pv-background);
+  --color-on-background: var(--pv-on-background);
+  --color-surface-variant: var(--pv-surface-variant);
+  --color-ai-accent: var(--pv-ai-accent);
+  --color-border-subtle: var(--pv-border-subtle);
+
+  --radius-DEFAULT: var(--pv-radius-default);
+  --radius-lg: var(--pv-radius-lg);
+  --radius-xl: var(--pv-radius-xl);
+  --radius-full: var(--pv-radius-full);
+  --radius-card: var(--pv-radius-card);
+  --radius-control: var(--pv-radius-control);
+
+  --spacing-xs: var(--pv-space-xs);
+  --spacing-base: var(--pv-space-base);
+  --spacing-sm: var(--pv-space-sm);
+  --spacing-md: var(--pv-space-md);
+  --spacing-lg: var(--pv-space-lg);
+  --spacing-xl: var(--pv-space-xl);
+  --spacing-gutter: var(--pv-space-gutter);
+  --spacing-margin-mobile: var(--pv-space-margin-mobile);
+  --spacing-container-max: var(--pv-space-container-max);
+
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 20px;
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--letter-spacing: -0.01em;
+  --text-headline-lg-mobile: 24px;
+  --text-headline-lg-mobile--line-height: 32px;
+  --text-label-md: 14px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--letter-spacing: 0.05em;
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 56px;
+  --text-display-lg--letter-spacing: -0.02em;
+
+  --shadow-level-1: var(--pv-shadow-level-1);
+  --shadow-level-2: var(--pv-shadow-level-2);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-surface text-on-surface font-body-md text-body-md antialiased;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .glass-nav {
+    backdrop-filter: blur(8px);
+    background: rgba(250, 248, 255, 0.8);
+  }
+
+  .ai-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(142, 68, 173, 0.1),
+      rgba(142, 68, 173, 0.2),
+      rgba(142, 68, 173, 0.1)
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
 }

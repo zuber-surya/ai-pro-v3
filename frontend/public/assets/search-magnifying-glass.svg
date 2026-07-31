@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none" role="img" aria-label="Search">
+  <!-- Stand-in for design_reference AST-SEARCH-ICON (screen.png missing from repo). Flat line style. -->
+  <circle cx="68" cy="68" r="36" stroke="#873da6" stroke-width="6"/>
+  <line x1="94" y1="94" x2="128" y2="128" stroke="#003d9b" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="68" cy="68" r="20" stroke="#c3c6d6" stroke-width="3"/>
+</svg>
