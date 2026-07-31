@@ -107,6 +107,7 @@ model Property {
   agent Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
   amenities PropertyAmenity[]
   images    PropertyImage[]
+  landmarks NearbyLandmark[]
 
   @@index([status], map: "ix_properties_status")
   @@index([price], map: "ix_properties_price")
@@ -115,6 +116,23 @@ model Property {
   @@index([agentId], map: "ix_properties_agent_id")
   @@index([publishedAt], map: "ix_properties_published_at")
   @@map("properties")
+}
+
+model NearbyLandmark {
+  id         String   @id @default(uuid()) @db.Uuid
+  propertyId String   @map("property_id") @db.Uuid
+  name       String   @db.VarChar(200)
+  category   String?  @db.VarChar(80)
+  distanceM  Int?     @map("distance_m")
+  lat        Float?
+  lng        Float?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId], map: "ix_nearby_landmarks_property_id")
+  @@map("nearby_landmarks")
 }
 
 model PropertyAmenity {

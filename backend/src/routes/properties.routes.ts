@@ -12,6 +12,7 @@ import {
   amenitiesUpdateSchema,
   bulkPropertyStatusSchema,
   exportPropertiesQuerySchema,
+  landmarksUpdateSchema,
   listPropertiesQuerySchema,
   propertyCreateSchema,
   propertyStatusPatchSchema,
@@ -175,7 +176,23 @@ propertiesRouter.put(
     const parsed = amenitiesUpdateSchema.safeParse(req.body);
     if (!parsed.success) throw zodToAppError(parsed.error);
     const property = await propertyService.replaceAmenities(
-      req.params.id,
+      req.params.id!,
+      parsed.data,
+      req.authUser!,
+    );
+    res.status(200).json(property);
+  }),
+);
+
+propertiesRouter.put(
+  "/:id/landmarks",
+  requireAuth,
+  requireRole("agent", "admin", "super_admin"),
+  asyncHandler(async (req, res) => {
+    const parsed = landmarksUpdateSchema.safeParse(req.body);
+    if (!parsed.success) throw zodToAppError(parsed.error);
+    const property = await propertyService.replaceLandmarks(
+      req.params.id!,
       parsed.data,
       req.authUser!,
     );

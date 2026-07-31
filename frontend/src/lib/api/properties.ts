@@ -14,6 +14,15 @@ export type PropertyAgent = {
   isActive: boolean;
 };
 
+export type PropertyLandmark = {
+  id: string;
+  name: string;
+  category: string | null;
+  distanceM: number | null;
+  lat: number | null;
+  lng: number | null;
+};
+
 export type PropertyImage = {
   id: string;
   url: string;
@@ -44,6 +53,8 @@ export type Property = {
   featured: boolean;
   agentId: string | null;
   coverImageUrl?: string | null;
+  lat?: number | null;
+  lng?: number | null;
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
@@ -52,6 +63,7 @@ export type Property = {
 export type PropertyDetail = Property & {
   images: PropertyImage[];
   agent: PropertyAgent | null;
+  landmarks: PropertyLandmark[];
 };
 
 export type PaginatedProperties = {
@@ -99,6 +111,8 @@ export type PropertyUpdatePayload = {
   city?: string | null;
   featured?: boolean;
   status?: PropertyStatus;
+  lat?: number | null;
+  lng?: number | null;
 };
 
 function toQuery(params?: ListPropertiesParams & { format?: string; limit?: number }) {
@@ -144,9 +158,28 @@ export function updateProperty(id: string, payload: PropertyUpdatePayload) {
 }
 
 export function replaceAmenities(id: string, amenities: string[]) {
-  return apiRequest<Property>(`/properties/${id}/amenities`, {
+  return apiRequest<PropertyDetail>(`/properties/${id}/amenities`, {
     method: "PUT",
     body: { amenities },
+  });
+}
+
+export function replaceLandmarks(
+  id: string,
+  landmarks: Array<
+    | string
+    | {
+        name: string;
+        category?: string | null;
+        distanceM?: number | null;
+        lat?: number | null;
+        lng?: number | null;
+      }
+  >,
+) {
+  return apiRequest<PropertyDetail>(`/properties/${id}/landmarks`, {
+    method: "PUT",
+    body: { landmarks },
   });
 }
 

@@ -11,6 +11,7 @@ import type {
   AmenitiesUpdateInput,
   BulkPropertyStatusInput,
   ExportPropertiesQuery,
+  LandmarksUpdateInput,
   ListPropertiesQuery,
   PropertyCreateInput,
   PropertyUpdateInput,
@@ -219,6 +220,8 @@ export const propertyService = {
       postalCode: input.postalCode === null ? null : input.postalCode,
       country: input.country === null ? null : input.country,
       featured: input.featured,
+      lat: input.lat === null ? null : input.lat,
+      lng: input.lng === null ? null : input.lng,
       publishedAt:
         nextStatus === "published"
           ? existing.publishedAt ?? new Date()
@@ -332,7 +335,25 @@ export const propertyService = {
 
     const property = await propertyRepository.replaceAmenities(id, amenities);
     if (!property) throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
-    return toPublicProperty(property);
+    return toPropertyDetail(property);
+  },
+
+  async replaceLandmarks(id: string, input: LandmarksUpdateInput, actor: AuthUser) {
+    const existing = await propertyRepository.findById(id);
+    if (!existing) throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
+    await assertCanAccessProperty(actor, existing.agentId);
+
+    const landmarks = input.landmarks.map((l) => ({
+      name: l.name.trim(),
+      category: l.category?.trim() || null,
+      distanceM: l.distanceM ?? null,
+      lat: l.lat ?? null,
+      lng: l.lng ?? null,
+    })).filter((l) => l.name);
+
+    const property = await propertyRepository.replaceLandmarks(id, landmarks);
+    if (!property) throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
+    return toPropertyDetail(property);
   },
 
   async bulkStatus(input: BulkPropertyStatusInput, actor: AuthUser) {

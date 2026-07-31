@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   AppError,
@@ -9,9 +10,18 @@ import {
   propertyMediaSrc,
   type Property,
   type PropertyDetail,
+  type PropertyLandmark,
 } from "@/lib/api";
 import { Skeleton } from "@/components/states/Skeleton";
 import { ErrorState } from "@/components/states/ErrorState";
+
+const MapSection = dynamic(
+  () => import("./MapSection").then((m) => ({ default: m.MapSection })),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-80 w-full rounded-xl" />,
+  },
+);
 
 function formatPrice(price: string, currency: string) {
   const n = Number(price);
@@ -44,6 +54,31 @@ function amenityIcon(name: string): string {
   if (key.includes("club")) return "villa";
   if (key.includes("balcon")) return "balcony";
   return "check_circle";
+}
+
+function landmarkCategoryIcon(category: string | null): string {
+  const key = (category ?? "").toLowerCase();
+  if (key.includes("school")) return "school";
+  if (key.includes("park")) return "forest";
+  if (key.includes("transit") || key.includes("metro") || key.includes("train")) return "train";
+  return "place";
+}
+
+function formatDistance(meters: number | null): string {
+  if (meters == null) return "";
+  if (meters < 1000) return `${meters} m`;
+  return `${(meters / 1000).toFixed(1)} km`;
+}
+
+function groupLandmarks(landmarks: PropertyLandmark[]) {
+  const groups = new Map<string, PropertyLandmark[]>();
+  for (const landmark of landmarks) {
+    const key = landmark.category?.trim() || "Nearby";
+    const list = groups.get(key) ?? [];
+    list.push(landmark);
+    groups.set(key, list);
+  }
+  return Array.from(groups.entries());
 }
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
@@ -353,6 +388,38 @@ export function PropertyDetailPanel({ propertyId }: { propertyId: string }) {
                   </p>
                 </div>
               )}
+            </section>
+
+            <section>
+              <h2 className="mb-md font-headline-md text-headline-md">Location & Nearby</h2>
+              <div className="mb-lg overflow-hidden rounded-xl">
+                <MapSection
+                  lat={property.lat}
+                  lng={property.lng}
+                  title={property.title}
+                  landmarks={property.landmarks ?? []}
+                />
+              </div>
+              {(property.landmarks ?? []).length > 0 ? (
+                <div className="grid grid-cols-1 gap-lg md:grid-cols-3">
+                  {groupLandmarks(property.landmarks).map(([category, items]) => (
+                    <div key={category} className="space-y-sm">
+                      <div className="mb-xs flex items-center gap-xs font-label-md text-primary">
+                        <Icon name={landmarkCategoryIcon(category)} className="text-sm" />
+                        {category}
+                      </div>
+                      <ul className="space-y-xs text-body-sm text-on-surface-variant">
+                        {items.map((item) => (
+                          <li key={item.id} className="flex justify-between gap-md">
+                            <span>{item.name}</span>
+                            <span>{formatDistance(item.distanceM)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </section>
           </div>
 

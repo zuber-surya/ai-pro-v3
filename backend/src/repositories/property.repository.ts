@@ -1,7 +1,24 @@
-import type { Agent, Prisma, Property, PropertyAmenity, PropertyImage, PropertyStatus } from "@prisma/client";
+import type {
+  Agent,
+  NearbyLandmark,
+  Prisma,
+  Property,
+  PropertyAmenity,
+  PropertyImage,
+  PropertyStatus,
+} from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { toPublicAgent, type PublicAgent } from "./agent.repository.js";
 import { toPublicPropertyImage, type PublicPropertyImage } from "./propertyImage.repository.js";
+
+export type PublicLandmark = {
+  id: string;
+  name: string;
+  category: string | null;
+  distanceM: number | null;
+  lat: number | null;
+  lng: number | null;
+};
 
 export type PublicProperty = {
   id: string;
@@ -25,6 +42,8 @@ export type PublicProperty = {
   featured: boolean;
   agentId: string | null;
   coverImageUrl: string | null;
+  lat: number | null;
+  lng: number | null;
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
@@ -33,15 +52,28 @@ export type PublicProperty = {
 export type PropertyDetail = PublicProperty & {
   images: PublicPropertyImage[];
   agent: PublicAgent | null;
+  landmarks: PublicLandmark[];
 };
 
-type PropertyWithAmenities = Property & {
+type PropertyWithRelations = Property & {
   amenities?: PropertyAmenity[];
   images?: PropertyImage[];
   agent?: Agent | null;
+  landmarks?: NearbyLandmark[];
 };
 
-export function toPublicProperty(p: PropertyWithAmenities): PublicProperty {
+export function toPublicLandmark(l: NearbyLandmark): PublicLandmark {
+  return {
+    id: l.id,
+    name: l.name,
+    category: l.category,
+    distanceM: l.distanceM,
+    lat: l.lat,
+    lng: l.lng,
+  };
+}
+
+export function toPublicProperty(p: PropertyWithRelations): PublicProperty {
   const cover =
     (p.images ?? []).find((img) => img.kind === "photo")?.url ??
     (p.images ?? [])[0]?.url ??
@@ -68,17 +100,20 @@ export function toPublicProperty(p: PropertyWithAmenities): PublicProperty {
     featured: p.featured,
     agentId: p.agentId,
     coverImageUrl: cover,
+    lat: p.lat,
+    lng: p.lng,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
     publishedAt: p.publishedAt?.toISOString() ?? null,
   };
 }
 
-export function toPropertyDetail(p: PropertyWithAmenities): PropertyDetail {
+export function toPropertyDetail(p: PropertyWithRelations): PropertyDetail {
   return {
     ...toPublicProperty(p),
     images: (p.images ?? []).map(toPublicPropertyImage),
     agent: p.agent ? toPublicAgent(p.agent) : null,
+    landmarks: (p.landmarks ?? []).map(toPublicLandmark),
   };
 }
 
@@ -118,6 +153,7 @@ export const propertyRepository = {
         amenities: { orderBy: { name: "asc" } },
         agent: true,
         images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+        landmarks: { orderBy: [{ category: "asc" }, { name: "asc" }] },
       },
     });
   },
@@ -203,6 +239,7 @@ export const propertyRepository = {
         amenities: true,
         agent: true,
         images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+        landmarks: { orderBy: [{ category: "asc" }, { name: "asc" }] },
       },
     });
   },
@@ -215,6 +252,7 @@ export const propertyRepository = {
         amenities: { orderBy: { name: "asc" } },
         agent: true,
         images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+        landmarks: { orderBy: [{ category: "asc" }, { name: "asc" }] },
       },
     });
   },
@@ -247,6 +285,32 @@ export const propertyRepository = {
           propertyId,
           name: a.name,
           isCustom: a.isCustom,
+        })),
+      }),
+    ]);
+    return this.findById(propertyId);
+  },
+
+  async replaceLandmarks(
+    propertyId: string,
+    landmarks: Array<{
+      name: string;
+      category?: string | null;
+      distanceM?: number | null;
+      lat?: number | null;
+      lng?: number | null;
+    }>,
+  ) {
+    await prisma.$transaction([
+      prisma.nearbyLandmark.deleteMany({ where: { propertyId } }),
+      prisma.nearbyLandmark.createMany({
+        data: landmarks.map((l) => ({
+          propertyId,
+          name: l.name,
+          category: l.category ?? null,
+          distanceM: l.distanceM ?? null,
+          lat: l.lat ?? null,
+          lng: l.lng ?? null,
         })),
       }),
     ]);

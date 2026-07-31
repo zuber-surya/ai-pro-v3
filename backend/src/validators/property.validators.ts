@@ -52,11 +52,38 @@ export const propertyUpdateSchema = z
     country: z.string().max(120).nullable().optional(),
     featured: z.boolean().optional(),
     agentId: z.string().uuid().nullable().optional(),
+    lat: z.number().min(-90).max(90).nullable().optional(),
+    lng: z.number().min(-180).max(180).nullable().optional(),
   })
   .refine((v) => Object.keys(v).length > 0, { message: "At least one field required" });
 
 export const amenitiesUpdateSchema = z.object({
   amenities: z.array(z.string().min(1).max(120)).max(100),
+});
+
+const landmarkItemSchema = z.union([
+  z
+    .string()
+    .min(1)
+    .max(200)
+    .transform((name) => ({
+      name,
+      category: null as string | null,
+      distanceM: null as number | null,
+      lat: null as number | null,
+      lng: null as number | null,
+    })),
+  z.object({
+    name: z.string().min(1).max(200),
+    category: z.string().max(80).nullable().optional(),
+    distanceM: z.number().int().min(0).nullable().optional(),
+    lat: z.number().min(-90).max(90).nullable().optional(),
+    lng: z.number().min(-180).max(180).nullable().optional(),
+  }),
+]);
+
+export const landmarksUpdateSchema = z.object({
+  landmarks: z.array(landmarkItemSchema).max(50),
 });
 
 export const propertyStatusPatchSchema = z.object({
@@ -84,6 +111,7 @@ export type ListPropertiesQuery = z.infer<typeof listPropertiesQuerySchema>;
 export type PropertyCreateInput = z.infer<typeof propertyCreateSchema>;
 export type PropertyUpdateInput = z.infer<typeof propertyUpdateSchema>;
 export type AmenitiesUpdateInput = z.infer<typeof amenitiesUpdateSchema>;
+export type LandmarksUpdateInput = z.infer<typeof landmarksUpdateSchema>;
 export type BulkPropertyStatusInput = z.infer<typeof bulkPropertyStatusSchema>;
 export type ExportPropertiesQuery = z.infer<typeof exportPropertiesQuerySchema>;
 export type SimilarPropertiesQuery = z.infer<typeof similarPropertiesQuerySchema>;
