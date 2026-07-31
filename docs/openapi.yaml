@@ -1,0 +1,5979 @@
+openapi: 3.1.0
+info:
+  title: Property AI Studio (PropVista CRM) API
+  version: 1.0.0
+  description: 'REST API for PropVista CRM. Base path /api/v1. JWT Bearer auth. Gemini-only
+    AI. Roles: customer, agent, admin, super_admin. Guest = no auth. Errors: {error:{code,message,details[]}}.
+    Pagination meta. Prices as strings. Notification channels: email, in_app.'
+servers:
+- url: http://localhost:4000/api/v1
+  description: Local development
+- url: https://staging-api.propvista.example/api/v1
+  description: Staging
+- url: https://api.propvista.example/api/v1
+  description: Production
+tags:
+- name: Health
+- name: Auth
+- name: Users
+- name: Agents
+- name: Properties
+- name: Media
+- name: Search
+- name: AI
+- name: Favorites
+- name: Customer
+- name: Leads
+- name: Visits
+- name: Notifications
+- name: CMS
+- name: Metrics
+- name: AI Config
+- name: Bulk
+paths:
+  /health:
+    get:
+      tags:
+      - Health
+      summary: Health check
+      description: Guest (no auth). Service health for load balancers.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                version: 1.0.0
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getHealth
+      security: []
+  /auth/register:
+    post:
+      tags:
+      - Auth
+      summary: Register customer
+      description: Guest (no auth). Creates customer account.
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postAuthRegister
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: user@example.com
+              password: SecurePass1!
+              fullName: Jane Doe
+  /auth/token:
+    post:
+      tags:
+      - Auth
+      summary: Obtain tokens
+      description: Guest (no auth). JWT access and refresh tokens.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postAuthToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: user@example.com
+              password: SecurePass1!
+  /auth/refresh:
+    post:
+      tags:
+      - Auth
+      summary: Refresh access token
+      description: Guest (no auth). Rotate access token.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postAuthRefresh
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            example:
+              refreshToken: eyJ...
+  /auth/logout:
+    post:
+      tags:
+      - Auth
+      summary: Logout
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.
+        Invalidates refresh token.'
+      responses:
+        '204':
+          description: Logged out
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postAuthLogout
+      security:
+      - bearerAuth: []
+  /auth/me:
+    get:
+      tags:
+      - Auth
+      summary: Current user profile
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getAuthMe
+      security:
+      - bearerAuth: []
+  /users:
+    get:
+      tags:
+      - Users
+      summary: List users
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserPublic'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getUsers
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    post:
+      tags:
+      - Users
+      summary: Create user
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postUsers
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+  /users/{id}:
+    get:
+      tags:
+      - Users
+      summary: Get user
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin, agent.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getUserById
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+    patch:
+      tags:
+      - Users
+      summary: Update user
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: patchUserById
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+    delete:
+      tags:
+      - Users
+      summary: Delete user
+      description: 'Auth: JWT Bearer. Authorization: super_admin.'
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: deleteUserById
+      security:
+      - bearerAuth:
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+  /agents:
+    get:
+      tags:
+      - Agents
+      summary: List agents
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Agent'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getAgents
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    post:
+      tags:
+      - Agents
+      summary: Create agent
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postAgents
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCreate'
+  /agents/{id}:
+    get:
+      tags:
+      - Agents
+      summary: Get agent
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getAgentById
+      security: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+    patch:
+      tags:
+      - Agents
+      summary: Update agent
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin, agent.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: patchAgentById
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentUpdate'
+    delete:
+      tags:
+      - Agents
+      summary: Delete agent
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: deleteAgentById
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+  /properties:
+    get:
+      tags:
+      - Properties
+      summary: List properties
+      description: Guest allowed for published listings.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Property'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getProperties
+      security: []
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/PropertyStatus'
+      - name: q
+        in: query
+        schema:
+          type: string
+    post:
+      tags:
+      - Properties
+      summary: Create property
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postProperties
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyCreate'
+            example:
+              title: 2BHK Apt
+              price: '8500000.00'
+  /properties/featured:
+    get:
+      tags:
+      - Properties
+      summary: Featured properties
+      description: Guest (no auth).
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Property'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+      operationId: getPropertiesFeatured
+      security: []
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+  /properties/export:
+    get:
+      tags:
+      - Properties
+      summary: Export properties
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Export file
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getPropertiesExport
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: format
+        in: query
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+  /properties/bulk/status:
+    post:
+      tags:
+      - Properties
+      summary: Bulk update property status
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postPropertiesBulkStatus
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkPropertyStatusRequest'
+  /properties/{id}:
+    get:
+      tags:
+      - Properties
+      summary: Get property
+      description: Guest for published listings.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getPropertyById
+      security: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+    patch:
+      tags:
+      - Properties
+      summary: Update property
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: patchPropertyById
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyUpdate'
+    delete:
+      tags:
+      - Properties
+      summary: Delete property
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: deletePropertyById
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+  /properties/{id}/status:
+    patch:
+      tags:
+      - Properties
+      summary: Update property status
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: patchPropertyStatus
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyStatusPatch'
+  /properties/{id}/duplicate:
+    post:
+      tags:
+      - Properties
+      summary: Duplicate property
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postPropertyDuplicate
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+  /properties/{id}/similar:
+    get:
+      tags:
+      - Properties
+      summary: Similar properties
+      description: Guest allowed. Gemini embeddings when enabled.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Property'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getPropertySimilar
+      security: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+  /properties/{id}/amenities:
+    put:
+      tags:
+      - Media
+      summary: Replace amenities
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: putPropertyAmenities
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Property identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmenitiesUpdate'
+            example:
+              amenities:
+              - pool
+              - gym
+  /properties/{id}/landmarks:
+    put:
+      tags:
+      - Media
+      summary: Replace landmarks
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: putPropertyLandmarks
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Property identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LandmarksUpdate'
+            example:
+              landmarks:
+              - Metro Station
+  /properties/{id}/images:
+    get:
+      tags:
+      - Media
+      summary: List property images
+      description: Guest for published properties.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PropertyImage'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getPropertyImages
+      security: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Property identifier
+    post:
+      tags:
+      - Media
+      summary: Add property image
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyImage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postPropertyImages
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Property identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyImageCreate'
+  /properties/{id}/images/{imageId}:
+    delete:
+      tags:
+      - Media
+      summary: Delete property image
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: deletePropertyImage
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Property identifier
+      - name: imageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Image identifier
+  /search/suggest:
+    get:
+      tags:
+      - Search
+      summary: Search suggestions
+      description: Guest (no auth). Autocomplete.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchSuggestResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getSearchSuggest
+      security: []
+      parameters:
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 1
+  /ai/search:
+    post:
+      tags:
+      - AI
+      summary: AI property search
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.
+        Gemini when mode=ai; keyword fallback when mode=fallback.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiSearchResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postAiSearch
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiSearchRequest'
+            example:
+              query: 3BHK near metro
+              mode: ai
+            examples:
+              aiMode:
+                summary: Gemini search
+                value:
+                  query: 3BHK near metro under 1 crore
+                  mode: ai
+                  filters:
+                    city: Mumbai
+              fallbackMode:
+                summary: Keyword fallback
+                value:
+                  query: 2BHK Andheri
+                  mode: fallback
+                  filters:
+                    maxPrice: '9000000.00'
+  /ai/chat:
+    post:
+      tags:
+      - AI
+      summary: AI chat assistant
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.
+        Gemini-only assistant.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiChatResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postAiChat
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiChatRequest'
+            example:
+              message: What documents for a home loan?
+  /ai/loan-analysis:
+    post:
+      tags:
+      - AI
+      summary: AI loan analysis
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.
+        Gemini affordability analysis.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiLoanAnalysisResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postAiLoanAnalysis
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiLoanAnalysisRequest'
+            example:
+              propertyPrice: '10000000.00'
+              downPayment: '2000000.00'
+              annualIncome: '2400000.00'
+              tenureYears: 20
+  /favorites:
+    get:
+      tags:
+      - Favorites
+      summary: List favorites
+      description: 'Auth: JWT Bearer. Authorization: customer.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FavoriteItem'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getFavorites
+      security:
+      - bearerAuth:
+        - customer
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    post:
+      tags:
+      - Favorites
+      summary: Add favorite
+      description: 'Auth: JWT Bearer. Authorization: customer.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteItem'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postFavorites
+      security:
+      - bearerAuth:
+        - customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FavoriteCreate'
+  /favorites/{propertyId}:
+    delete:
+      tags:
+      - Favorites
+      summary: Remove favorite
+      description: 'Auth: JWT Bearer. Authorization: customer.'
+      responses:
+        '204':
+          description: Removed
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: deleteFavorite
+      security:
+      - bearerAuth:
+        - customer
+      parameters:
+      - name: propertyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Property identifier
+  /customer/dashboard:
+    get:
+      tags:
+      - Customer
+      summary: Customer dashboard
+      description: 'Auth: JWT Bearer. Authorization: customer.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDashboard'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getCustomerDashboard
+      security:
+      - bearerAuth:
+        - customer
+  /customer/profile:
+    get:
+      tags:
+      - Customer
+      summary: Get customer profile
+      description: 'Auth: JWT Bearer. Authorization: customer.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getCustomerProfile
+      security:
+      - bearerAuth:
+        - customer
+    put:
+      tags:
+      - Customer
+      summary: Update customer profile
+      description: 'Auth: JWT Bearer. Authorization: customer.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: putCustomerProfile
+      security:
+      - bearerAuth:
+        - customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerProfile'
+  /customer/inquiries:
+    get:
+      tags:
+      - Customer
+      summary: List customer inquiries
+      description: 'Auth: JWT Bearer. Authorization: customer.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Inquiry'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getCustomerInquiries
+      security:
+      - bearerAuth:
+        - customer
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+  /customer/saved-searches:
+    get:
+      tags:
+      - Customer
+      summary: List saved searches
+      description: 'Auth: JWT Bearer. Authorization: customer.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SavedSearch'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getCustomerSavedSearches
+      security:
+      - bearerAuth:
+        - customer
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    post:
+      tags:
+      - Customer
+      summary: Create saved search
+      description: 'Auth: JWT Bearer. Authorization: customer. Notify via email or
+        in_app only.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearch'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postCustomerSavedSearches
+      security:
+      - bearerAuth:
+        - customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedSearchCreate'
+            example:
+              name: Mumbai 3BHK
+              criteria:
+                bedrooms: 3
+              notifyVia: email
+  /customer/saved-searches/{id}:
+    delete:
+      tags:
+      - Customer
+      summary: Delete saved search
+      description: 'Auth: JWT Bearer. Authorization: customer.'
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: deleteCustomerSavedSearch
+      security:
+      - bearerAuth:
+        - customer
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+  /leads:
+    get:
+      tags:
+      - Leads
+      summary: List leads
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Lead'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getLeads
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: stage
+        in: query
+        schema:
+          $ref: '#/components/schemas/LeadStage'
+    post:
+      tags:
+      - Leads
+      summary: Create lead
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.
+        Requires Idempotency-Key header.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lead'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postLeads
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Unique key to safely retry lead creation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeadCreate'
+  /leads/{id}:
+    get:
+      tags:
+      - Leads
+      summary: Get lead
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lead'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getLeadById
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+    patch:
+      tags:
+      - Leads
+      summary: Update lead
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lead'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: patchLeadById
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeadUpdate'
+  /leads/{id}/stage:
+    patch:
+      tags:
+      - Leads
+      summary: Update lead stage
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lead'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: patchLeadStage
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeadStagePatch'
+  /leads/{id}/notes:
+    get:
+      tags:
+      - Leads
+      summary: List lead notes
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeadNote'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getLeadNotes
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    post:
+      tags:
+      - Leads
+      summary: Add lead note
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeadNote'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postLeadNotes
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeadNoteCreate'
+            example:
+              body: Called customer.
+  /visits:
+    post:
+      tags:
+      - Visits
+      summary: Schedule visit
+      description: 'Auth: JWT Bearer. Authorization: customer, agent.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Visit'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postVisits
+      security:
+      - bearerAuth:
+        - customer
+        - agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitCreate'
+  /notifications:
+    get:
+      tags:
+      - Notifications
+      summary: List notifications
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.
+        Channels: email, in_app.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getNotifications
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+  /notifications/{id}/read:
+    post:
+      tags:
+      - Notifications
+      summary: Mark notification read
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postNotificationRead
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+  /notifications/read-all:
+    post:
+      tags:
+      - Notifications
+      summary: Mark all notifications read
+      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: All notifications marked read
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postNotificationsReadAll
+      security:
+      - bearerAuth: []
+  /notification-rules:
+    get:
+      tags:
+      - Notifications
+      summary: List notification rules
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NotificationRule'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getNotificationRules
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    post:
+      tags:
+      - Notifications
+      summary: Create notification rule
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin. Channels:
+        email, in_app only.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationRule'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postNotificationRules
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationRuleCreate'
+            example:
+              event: lead.created
+              channels:
+              - email
+              - in_app
+  /notification-rules/{id}:
+    patch:
+      tags:
+      - Notifications
+      summary: Update notification rule
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationRule'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: patchNotificationRule
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationRuleUpdate'
+    delete:
+      tags:
+      - Notifications
+      summary: Delete notification rule
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: deleteNotificationRule
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+  /cms/pages:
+    get:
+      tags:
+      - CMS
+      summary: List CMS pages
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CmsPage'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getCmsPages
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    post:
+      tags:
+      - CMS
+      summary: Create CMS page
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmsPage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postCmsPages
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CmsPageCreate'
+  /cms/pages/{id}:
+    get:
+      tags:
+      - CMS
+      summary: Get CMS page
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmsPage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getCmsPageById
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+    patch:
+      tags:
+      - CMS
+      summary: Update CMS page
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmsPage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: patchCmsPageById
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CmsPageUpdate'
+    delete:
+      tags:
+      - CMS
+      summary: Delete CMS page
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: deleteCmsPageById
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+  /cms/homepage:
+    get:
+      tags:
+      - CMS
+      summary: Get homepage CMS payload
+      description: Guest (no auth). Public homepage.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmsPage'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getCmsHomepage
+      security: []
+  /pages/{slug}:
+    get:
+      tags:
+      - CMS
+      summary: Get published page by slug
+      description: Guest (no auth).
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmsPage'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getPageBySlug
+      security: []
+      parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+  /metrics/dashboard:
+    get:
+      tags:
+      - Metrics
+      summary: Metrics dashboard
+      description: 'Auth: JWT Bearer. Authorization: agent, admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsDashboard'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getMetricsDashboard
+      security:
+      - bearerAuth:
+        - agent
+        - admin
+        - super_admin
+  /metrics/reports:
+    get:
+      tags:
+      - Metrics
+      summary: Metrics reports
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsReport'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getMetricsReports
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: reportType
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+  /ai/config:
+    get:
+      tags:
+      - AI Config
+      summary: Get AI config
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin. Gemini-only.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConfig'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getAiConfig
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+    put:
+      tags:
+      - AI Config
+      summary: Update AI config
+      description: 'Auth: JWT Bearer. Authorization: super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConfig'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: putAiConfig
+      security:
+      - bearerAuth:
+        - super_admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiConfig'
+            example:
+              provider: gemini
+              model: gemini-2.0-flash
+              enabled: true
+  /ai/config/preview:
+    post:
+      tags:
+      - AI Config
+      summary: Preview AI config
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConfigPreviewResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postAiConfigPreview
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiConfigPreviewRequest'
+            example:
+              prompt: Summarize luxury listings
+  /bulk/properties/validate:
+    post:
+      tags:
+      - Bulk
+      summary: Validate bulk property import
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkValidateResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postBulkPropertiesValidate
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkValidateRequest'
+  /bulk/properties/sessions/{id}:
+    get:
+      tags:
+      - Bulk
+      summary: Get bulk import session
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkSession'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getBulkSession
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+  /bulk/properties/sessions/{id}/errors.csv:
+    get:
+      tags:
+      - Bulk
+      summary: Download bulk validation errors
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '200':
+          description: CSV error report
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: getBulkSessionErrorsCsv
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+  /bulk/properties/sessions/{id}/import:
+    post:
+      tags:
+      - Bulk
+      summary: Import validated bulk session
+      description: 'Auth: JWT Bearer. Authorization: admin, super_admin.'
+      responses:
+        '202':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkSession'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: '400'
+                  message: Human-readable error message
+                  details:
+                  - field: example
+                    issue: validation failed
+      operationId: postBulkSessionImport
+      security:
+      - bearerAuth:
+        - admin
+        - super_admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Resource identifier
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token
+  schemas:
+    ErrorDetail:
+      type: object
+      properties:
+        field:
+          type: string
+        issue:
+          type: string
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: object
+          required:
+          - code
+          - message
+          - details
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                $ref: '#/components/schemas/ErrorDetail'
+    Meta:
+      type: object
+      required:
+      - page
+      - pageSize
+      - total
+      - totalPages
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+    UserRole:
+      type: string
+      enum:
+      - customer
+      - agent
+      - admin
+      - super_admin
+    PropertyStatus:
+      type: string
+      enum:
+      - draft
+      - published
+      - archived
+      - sold
+      - rented
+    LeadStage:
+      type: string
+      enum:
+      - new
+      - contacted
+      - qualified
+      - visit_scheduled
+      - negotiation
+      - won
+      - lost
+    NotificationChannel:
+      type: string
+      enum:
+      - email
+      - in_app
+    AiSearchMode:
+      type: string
+      enum:
+      - ai
+      - fallback
+    PriceString:
+      type: string
+      description: Decimal price as string
+      example: '12500000.00'
+    UserPublic:
+      type: object
+      required:
+      - id
+      - email
+      - role
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        phone:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UserCreate:
+      type: object
+      required:
+      - email
+      - password
+      - role
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+        fullName:
+          type: string
+        phone:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+    UserUpdate:
+      type: object
+      properties:
+        fullName:
+          type: string
+        phone:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+    Agent:
+      type: object
+      required:
+      - id
+      - userId
+      - licenseNumber
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        licenseNumber:
+          type: string
+        bio:
+          type: string
+        specializations:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AgentCreate:
+      type: object
+      required:
+      - userId
+      - licenseNumber
+      properties:
+        userId:
+          type: string
+          format: uuid
+        licenseNumber:
+          type: string
+        bio:
+          type: string
+        specializations:
+          type: array
+          items:
+            type: string
+    AgentUpdate:
+      type: object
+      properties:
+        licenseNumber:
+          type: string
+        bio:
+          type: string
+        specializations:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+    Property:
+      type: object
+      required:
+      - id
+      - title
+      - status
+      - price
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/PropertyStatus'
+        price:
+          $ref: '#/components/schemas/PriceString'
+        currency:
+          type: string
+          default: INR
+        propertyType:
+          type: string
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: integer
+        areaSqFt:
+          type: number
+        address:
+          type: object
+          additionalProperties: true
+        amenities:
+          type: array
+          items:
+            type: string
+        landmarks:
+          type: array
+          items:
+            type: string
+        featured:
+          type: boolean
+        agentId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PropertyCreate:
+      type: object
+      required:
+      - title
+      - price
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/PropertyStatus'
+        price:
+          $ref: '#/components/schemas/PriceString'
+        propertyType:
+          type: string
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: integer
+        areaSqFt:
+          type: number
+        address:
+          type: object
+          additionalProperties: true
+        agentId:
+          type: string
+          format: uuid
+    PropertyUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          $ref: '#/components/schemas/PriceString'
+        propertyType:
+          type: string
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: integer
+        areaSqFt:
+          type: number
+        address:
+          type: object
+          additionalProperties: true
+        featured:
+          type: boolean
+    PropertyStatusPatch:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          $ref: '#/components/schemas/PropertyStatus'
+    BulkPropertyStatusRequest:
+      type: object
+      required:
+      - propertyIds
+      - status
+      properties:
+        propertyIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        status:
+          $ref: '#/components/schemas/PropertyStatus'
+    AmenitiesUpdate:
+      type: object
+      required:
+      - amenities
+      properties:
+        amenities:
+          type: array
+          items:
+            type: string
+    LandmarksUpdate:
+      type: object
+      required:
+      - landmarks
+      properties:
+        landmarks:
+          type: array
+          items:
+            type: string
+    PropertyImage:
+      type: object
+      required:
+      - id
+      - url
+      - sortOrder
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
+        caption:
+          type: string
+        sortOrder:
+          type: integer
+    PropertyImageCreate:
+      type: object
+      required:
+      - url
+      properties:
+        url:
+          type: string
+          format: uri
+        caption:
+          type: string
+        sortOrder:
+          type: integer
+    Lead:
+      type: object
+      required:
+      - id
+      - stage
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        propertyId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        agentId:
+          type: string
+          format: uuid
+        stage:
+          $ref: '#/components/schemas/LeadStage'
+        source:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    LeadCreate:
+      type: object
+      required:
+      - propertyId
+      properties:
+        propertyId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        source:
+          type: string
+        message:
+          type: string
+    LeadUpdate:
+      type: object
+      properties:
+        agentId:
+          type: string
+          format: uuid
+        source:
+          type: string
+        notes:
+          type: string
+    LeadStagePatch:
+      type: object
+      required:
+      - stage
+      properties:
+        stage:
+          $ref: '#/components/schemas/LeadStage'
+    LeadNote:
+      type: object
+      required:
+      - id
+      - body
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        body:
+          type: string
+        authorId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    LeadNoteCreate:
+      type: object
+      required:
+      - body
+      properties:
+        body:
+          type: string
+    TokenResponse:
+      type: object
+      required:
+      - accessToken
+      - refreshToken
+      - tokenType
+      - expiresIn
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        tokenType:
+          type: string
+          enum:
+          - Bearer
+        expiresIn:
+          type: integer
+    RegisterRequest:
+      type: object
+      required:
+      - email
+      - password
+      - fullName
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+        fullName:
+          type: string
+        phone:
+          type: string
+    LoginRequest:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    RefreshRequest:
+      type: object
+      required:
+      - refreshToken
+      properties:
+        refreshToken:
+          type: string
+    AiSearchRequest:
+      type: object
+      required:
+      - query
+      properties:
+        query:
+          type: string
+        mode:
+          $ref: '#/components/schemas/AiSearchMode'
+        filters:
+          type: object
+          additionalProperties: true
+    AiSearchResponse:
+      type: object
+      required:
+      - mode
+      - results
+      properties:
+        mode:
+          $ref: '#/components/schemas/AiSearchMode'
+        summary:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
+    AiChatRequest:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+        sessionId:
+          type: string
+          format: uuid
+        context:
+          type: object
+          additionalProperties: true
+    AiChatResponse:
+      type: object
+      required:
+      - reply
+      - provider
+      properties:
+        reply:
+          type: string
+        sessionId:
+          type: string
+          format: uuid
+        provider:
+          type: string
+          enum:
+          - gemini
+    AiLoanAnalysisRequest:
+      type: object
+      required:
+      - propertyPrice
+      - downPayment
+      - annualIncome
+      properties:
+        propertyPrice:
+          $ref: '#/components/schemas/PriceString'
+        downPayment:
+          $ref: '#/components/schemas/PriceString'
+        annualIncome:
+          $ref: '#/components/schemas/PriceString'
+        tenureYears:
+          type: integer
+          minimum: 1
+          maximum: 30
+    AiLoanAnalysisResponse:
+      type: object
+      required:
+      - provider
+      - analysis
+      properties:
+        provider:
+          type: string
+          enum:
+          - gemini
+        analysis:
+          type: string
+        estimatedEmi:
+          $ref: '#/components/schemas/PriceString'
+    AiConfig:
+      type: object
+      required:
+      - provider
+      - model
+      - enabled
+      properties:
+        provider:
+          type: string
+          enum:
+          - gemini
+        model:
+          type: string
+        enabled:
+          type: boolean
+        systemPrompt:
+          type: string
+        temperature:
+          type: number
+        maxOutputTokens:
+          type: integer
+    AiConfigPreviewRequest:
+      type: object
+      required:
+      - prompt
+      properties:
+        prompt:
+          type: string
+        config:
+          $ref: '#/components/schemas/AiConfig'
+    AiConfigPreviewResponse:
+      type: object
+      required:
+      - output
+      - provider
+      properties:
+        output:
+          type: string
+        provider:
+          type: string
+          enum:
+          - gemini
+    FavoriteItem:
+      type: object
+      required:
+      - propertyId
+      - createdAt
+      properties:
+        propertyId:
+          type: string
+          format: uuid
+        property:
+          $ref: '#/components/schemas/Property'
+        createdAt:
+          type: string
+          format: date-time
+    FavoriteCreate:
+      type: object
+      required:
+      - propertyId
+      properties:
+        propertyId:
+          type: string
+          format: uuid
+    CustomerDashboard:
+      type: object
+      properties:
+        favoritesCount:
+          type: integer
+        inquiriesCount:
+          type: integer
+        savedSearchesCount:
+          type: integer
+        recentProperties:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
+    CustomerProfile:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        preferences:
+          type: object
+          additionalProperties: true
+    Inquiry:
+      type: object
+      required:
+      - id
+      - propertyId
+      - status
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        propertyId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    SavedSearch:
+      type: object
+      required:
+      - id
+      - name
+      - criteria
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        criteria:
+          type: object
+          additionalProperties: true
+        notifyVia:
+          $ref: '#/components/schemas/NotificationChannel'
+        createdAt:
+          type: string
+          format: date-time
+    SavedSearchCreate:
+      type: object
+      required:
+      - name
+      - criteria
+      properties:
+        name:
+          type: string
+        criteria:
+          type: object
+          additionalProperties: true
+        notifyVia:
+          $ref: '#/components/schemas/NotificationChannel'
+    VisitCreate:
+      type: object
+      required:
+      - propertyId
+      - scheduledAt
+      properties:
+        propertyId:
+          type: string
+          format: uuid
+        scheduledAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+    Visit:
+      type: object
+      required:
+      - id
+      - propertyId
+      - scheduledAt
+      - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        propertyId:
+          type: string
+          format: uuid
+        scheduledAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+        notes:
+          type: string
+    Notification:
+      type: object
+      required:
+      - id
+      - channel
+      - title
+      - read
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        channel:
+          $ref: '#/components/schemas/NotificationChannel'
+        title:
+          type: string
+        body:
+          type: string
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    NotificationRule:
+      type: object
+      required:
+      - id
+      - event
+      - channels
+      - enabled
+      properties:
+        id:
+          type: string
+          format: uuid
+        event:
+          type: string
+        channels:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationChannel'
+        enabled:
+          type: boolean
+        template:
+          type: string
+    NotificationRuleCreate:
+      type: object
+      required:
+      - event
+      - channels
+      properties:
+        event:
+          type: string
+        channels:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationChannel'
+        enabled:
+          type: boolean
+        template:
+          type: string
+    NotificationRuleUpdate:
+      type: object
+      properties:
+        channels:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationChannel'
+        enabled:
+          type: boolean
+        template:
+          type: string
+    CmsPage:
+      type: object
+      required:
+      - id
+      - slug
+      - title
+      - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        status:
+          type: string
+          enum:
+          - draft
+          - published
+        publishedAt:
+          type: string
+          format: date-time
+    CmsPageCreate:
+      type: object
+      required:
+      - slug
+      - title
+      properties:
+        slug:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        status:
+          type: string
+          enum:
+          - draft
+          - published
+    CmsPageUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        body:
+          type: string
+        status:
+          type: string
+          enum:
+          - draft
+          - published
+    MetricsDashboard:
+      type: object
+      additionalProperties: true
+    MetricsReport:
+      type: object
+      properties:
+        reportType:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          additionalProperties: true
+    BulkValidateRequest:
+      type: object
+      required:
+      - records
+      properties:
+        records:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    BulkValidateResponse:
+      type: object
+      required:
+      - sessionId
+      - validCount
+      - errorCount
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        validCount:
+          type: integer
+        errorCount:
+          type: integer
+    BulkSession:
+      type: object
+      required:
+      - id
+      - status
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - pending
+          - validated
+          - imported
+          - failed
+        validCount:
+          type: integer
+        errorCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+    HealthResponse:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          enum:
+          - ok
+        version:
+          type: string
+    SearchSuggestResponse:
+      type: object
+      required:
+      - suggestions
+      properties:
+        suggestions:
+          type: array
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+              type:
+                type: string
+    MessageResponse:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+security:
+- bearerAuth: []
