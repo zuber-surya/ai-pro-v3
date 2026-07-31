@@ -35,12 +35,15 @@ git tag -a docs-v1.0 -m "Documentation freeze v1.0 — Constitution-aligned Requ
 # Optional remote: git push origin docs-v1.0
 ```
 
-## Blocked until Q2 chosen
+## Q2 decision
 
-Do **not** start Sprint 0 code until user selects repo path:
+| Field | Value |
+|-------|--------|
+| **Choice** | **2B** — local monorepo scaffold + CLAUDE.md + Actions templates |
+| **Date** | 2026-07-31 |
 
-- **2A** docs-only hold  
-- **2B** local monorepo scaffold + CLAUDE.md + Actions templates  
-- **2C** full GitHub (org/repo name required)
+Scaffold delivered: `frontend/`, `backend/`, root `README.md`, `CLAUDE.md`, `.github/workflows/ci.yml`.
 
-Held: GitHub repository structure, branch protection, Issues/Labels/Milestones/Projects, GitHub Actions, `CLAUDE.md`, `frontend/`/`backend/` scaffold.
+Still deferred (2C): branch protection, Issues/Labels/Milestones/Projects configuration beyond Actions templates.
+
+Sprint 0 implementation may proceed task-by-task per `10_TASK_BREAKDOWN.md` (start with remaining FEAT-00-* polish as needed).

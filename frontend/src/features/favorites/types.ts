@@ -1,0 +1,2 @@
+/** Feature types: favorites */
+

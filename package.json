@@ -1,0 +1,17 @@
+{
+  "name": "ai-prop-v3",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Property AI Studio / PropVista CRM monorepo",
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "lint": "npm --prefix frontend run lint && npm --prefix backend run lint",
+    "typecheck": "npm --prefix frontend run typecheck && npm --prefix backend run typecheck",
+    "test": "npm --prefix backend run test && npm --prefix frontend run test",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
