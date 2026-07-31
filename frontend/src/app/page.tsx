@@ -1,24 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Input, Modal } from "@/components/ui";
 import { EmptyState, ErrorState, Loader, Skeleton } from "@/components/states";
+import { getHealth } from "@/lib/api";
+import { AppError } from "@/types/api";
 import { publicEnv } from "@/lib/config/env";
 
-/** Temporary FEAT-00-02 spot-check surface — replace with SCR-HOME in later sprint. */
+/** Temporary Sprint 0 surface — FEAT-00-02 primitives + FEAT-00-03 health smoke */
 export default function HomePage() {
   const [open, setOpen] = useState(false);
+  const [health, setHealth] = useState<string>("checking…");
+  const [healthError, setHealthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getHealth()
+      .then((data) => {
+        if (!cancelled) {
+          setHealth(`${data.status}${data.version ? ` (${data.version})` : ""}`);
+          setHealthError(null);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          const message = err instanceof AppError ? `${err.code}: ${err.message}` : "Health request failed";
+          setHealthError(message);
+          setHealth("error");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-container-max flex-col gap-xl px-md py-xl md:px-xl">
       <header className="space-y-sm">
         <p className="font-label-md text-label-md text-ai-accent">PropVista CRM</p>
         <h1 className="font-display-lg text-display-lg text-on-surface">
-          Design tokens &amp; primitives
+          Sprint 0 — tokens &amp; API client
         </h1>
         <p className="text-body-md text-on-surface-variant">
-          FEAT-00-02 spot-check. API: <code>{publicEnv.apiBaseUrl}</code>
+          API base: <code>{publicEnv.apiBaseUrl}</code>
         </p>
+        <p className="text-body-md text-on-surface">
+          Health via <code>lib/api</code>:{" "}
+          <strong className={healthError ? "text-error" : "text-primary"}>{health}</strong>
+        </p>
+        {healthError ? <ErrorState message={healthError} /> : null}
       </header>
 
       <section className="space-y-md rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-[var(--pv-shadow-level-1)]">
@@ -61,8 +91,6 @@ export default function HomePage() {
         description="Try adjusting filters or search with natural language."
         action={<Button variant="primary">Reset search</Button>}
       />
-
-      <ErrorState message="Sample API failure for QA spot-check." onRetry={() => undefined} />
 
       <Modal
         open={open}

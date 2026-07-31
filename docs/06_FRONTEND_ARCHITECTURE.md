@@ -356,8 +356,9 @@ Avoid default `useMemo`/`useCallback` unless team/React Compiler guidance requir
 
 ```text
 lib/api/
-  client.ts          # baseURL, credentials/headers, refresh, parse envelope
-  auth.ts
+  client.ts          # baseURL, credentials/headers, refresh stub, parse envelope → AppError
+  health.ts          # sample resource module (pattern for OpenAPI resources)
+  auth.ts            # (FEAT-01) register/token/refresh/logout
   properties.ts
   search.ts
   leads.ts
@@ -372,6 +373,14 @@ lib/api/
   users.ts
   agents.ts
 ```
+
+**Implemented (FEAT-00-03):**
+
+- `frontend/src/lib/api/client.ts` — sole HTTP entry; throws `AppError` from `types/api.ts`
+- `frontend/src/lib/api/health.ts` — resource module pattern
+- `frontend/src/lib/auth/session.ts` — token getter + `refreshAccessTokenStub` (401 interceptor contract)
+- `configureApiAuth` wired via `ApiAuthBootstrap` in root layout
+- **Rule:** no `fetch` / `axios` in components or feature UI — hooks/`lib/api` only
 
 **Rules (Constitution §18)**
 

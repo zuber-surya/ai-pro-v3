@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { ApiAuthBootstrap } from "@/lib/auth/ApiAuthBootstrap";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,7 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="light">
-      <body className={`${inter.variable} font-body-md antialiased`}>{children}</body>
+      <body className={`${inter.variable} font-body-md antialiased`}>
+        <ApiAuthBootstrap>{children}</ApiAuthBootstrap>
+      </body>
     </html>
   );
 }
