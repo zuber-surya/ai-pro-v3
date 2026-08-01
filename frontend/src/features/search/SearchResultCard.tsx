@@ -23,13 +23,17 @@ function formatPrice(amount: string, currency: string) {
 export function SearchResultCard({
   item,
   view,
+  showMatch = true,
 }: {
   item: AiSearchResultItem;
   view: "grid" | "list";
+  /** Hide match % / reasons in filter-fallback mode (SCR-SEARCH-FB). */
+  showMatch?: boolean;
 }) {
   const router = useRouter();
   const thumb = searchThumbSrc(item.thumbnailUrl);
-  const reasons = item.matchReasons?.slice(0, 3) ?? [];
+  const reasons = showMatch ? (item.matchReasons?.slice(0, 3) ?? []) : [];
+  const score = showMatch ? item.matchScorePercent : null;
 
   function onFavorite(e: MouseEvent) {
     e.preventDefault();
@@ -63,12 +67,12 @@ export function SearchResultCard({
               </span>
             </div>
           )}
-          {item.matchScorePercent != null ? (
+          {score != null ? (
             <div className="absolute bottom-md left-md flex items-center gap-xs rounded-full bg-secondary/90 px-3 py-1 text-label-sm text-white backdrop-blur-sm">
               <span className="material-symbols-outlined text-[14px]" aria-hidden>
                 auto_awesome
               </span>
-              {item.matchScorePercent}% Match
+              {score}% Match
             </div>
           ) : null}
         </div>
@@ -169,12 +173,12 @@ export function SearchResultCard({
             </span>
           </button>
         </div>
-        {item.matchScorePercent != null ? (
+        {score != null ? (
           <div className="absolute bottom-md left-md flex items-center gap-xs rounded-full bg-secondary/90 px-3 py-1 text-label-sm text-white backdrop-blur-sm">
             <span className="material-symbols-outlined text-[14px]" aria-hidden>
               auto_awesome
             </span>
-            {item.matchScorePercent}% Match
+            {score}% Match
           </div>
         ) : null}
       </div>

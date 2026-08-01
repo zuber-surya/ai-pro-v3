@@ -16,6 +16,8 @@ import {
   SearchFiltersPanel,
   type SearchUiFilters,
 } from "./SearchFiltersPanel";
+import { SearchFallbackBanner } from "./fallback/SearchFallbackBanner";
+import { SearchEmptyState } from "./empty/SearchEmptyState";
 
 function toApiFilters(ui: SearchUiFilters): AiSearchFilters {
   const filters: AiSearchFilters = {};
@@ -43,8 +45,12 @@ export function SearchResultsPanel() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") ?? "";
 
+  const initialMode =
+    searchParams.get("mode") === "fallback" ? ("fallback" as const) : ("ai" as const);
+
   const [queryInput, setQueryInput] = useState(initialQuery);
   const [query, setQuery] = useState(initialQuery || "3BHK apartment");
+  const [searchMode, setSearchMode] = useState<"ai" | "fallback">(initialMode);
   const [filters, setFilters] = useState<SearchUiFilters>(DEFAULT_SEARCH_FILTERS);
   const [page, setPage] = useState(1);
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -54,13 +60,23 @@ export function SearchResultsPanel() {
   const [data, setData] = useState<AiSearchResponse | null>(null);
   const [filterTick, setFilterTick] = useState(0);
 
+  function syncUrl(nextQuery: string, mode: "ai" | "fallback") {
+    const params = new URLSearchParams();
+    if (nextQuery.trim()) params.set("q", nextQuery.trim());
+    if (mode === "fallback") params.set("mode", "fallback");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
+  }
+
   useEffect(() => {
     const q = searchParams.get("q");
+    const modeParam = searchParams.get("mode") === "fallback" ? "fallback" : "ai";
     if (q != null && q !== query) {
       setQuery(q);
       setQueryInput(q);
       setPage(1);
     }
+    setSearchMode((prev) => (prev === modeParam ? prev : modeParam));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
@@ -73,7 +89,7 @@ export function SearchResultsPanel() {
       try {
         const res = await aiSearch({
           query: query.trim() || "apartment",
-          mode: "ai",
+          mode: searchMode,
           filters: toApiFilters(filters),
           page,
           pageSize: 12,
@@ -83,15 +99,40 @@ export function SearchResultsPanel() {
         setStatus("ready");
       } catch (e) {
         if (cancelled) return;
-        setError(e instanceof AppError ? e.message : "Search failed");
-        setStatus("error");
+        // Prefer filter-only recovery over a dead-end error page
+        try {
+          const fallback = await aiSearch({
+            query: query.trim() || "apartment",
+            mode: "fallback",
+            filters: toApiFilters(filters),
+            page,
+            pageSize: 12,
+          });
+          if (cancelled) return;
+          setData({
+            ...fallback,
+            mode: "fallback",
+            fallbackReason: e instanceof AppError ? e.code : "INTERNAL_ERROR",
+            bannerMessage:
+              fallback.bannerMessage ||
+              "AI ranking is temporarily unavailable. Showing filter-matched listings.",
+          });
+          setSearchMode("fallback");
+          syncUrl(query, "fallback");
+          setStatus("ready");
+        } catch {
+          if (cancelled) return;
+          setError(e instanceof AppError ? e.message : "Search failed");
+          setStatus("error");
+        }
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [query, page, filterTick]); // filters applied via Apply / debounce tick
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- filters via filterTick / apply
+  }, [query, page, filterTick, searchMode]);
 
   function applyFilters() {
     setPage(1);
@@ -104,15 +145,42 @@ export function SearchResultsPanel() {
     setFilterTick((n) => n + 1);
   }
 
+  function resetSearch() {
+    setFilters(DEFAULT_SEARCH_FILTERS);
+    setQueryInput("");
+    setQuery("apartment");
+    setSearchMode("ai");
+    setPage(1);
+    setSort("relevance");
+    setFilterTick((n) => n + 1);
+    syncUrl("apartment", "ai");
+  }
+
+  function refineAiSearch() {
+    setSearchMode("ai");
+    setPage(1);
+    setFilterTick((n) => n + 1);
+    syncUrl(query, "ai");
+  }
+
+  function runQuery(next: string, mode: "ai" | "fallback" = searchMode) {
+    const q = next.trim() || "apartment";
+    setQueryInput(next.trim());
+    setQuery(q);
+    setSearchMode(mode);
+    setPage(1);
+    setFilterTick((n) => n + 1);
+    syncUrl(q, mode);
+  }
+
   function onSearchSubmit(e: FormEvent) {
     e.preventDefault();
-    const next = queryInput.trim();
-    setQuery(next || "apartment");
-    setPage(1);
-    const params = new URLSearchParams(searchParams.toString());
-    if (next) params.set("q", next);
-    else params.delete("q");
-    router.replace(`${pathname}?${params.toString()}`);
+    runQuery(queryInput, searchMode);
+  }
+
+  function broadenSearch() {
+    clearFilters();
+    runQuery(query || "apartment", "fallback");
   }
 
   const results = useMemo(() => {
@@ -234,13 +302,13 @@ export function SearchResultsPanel() {
           </div>
         </div>
 
-        {data?.mode === "fallback" && data.bannerMessage ? (
-          <div
-            className="mb-lg rounded-xl border border-outline-variant bg-surface-container px-lg py-md text-body-sm text-on-surface"
-            role="status"
-          >
-            {data.bannerMessage}
-          </div>
+        {status === "ready" && data?.mode === "fallback" ? (
+          <SearchFallbackBanner
+            query={query}
+            message={data.bannerMessage}
+            onResetSearch={resetSearch}
+            onRefineAi={refineAiSearch}
+          />
         ) : null}
 
         {status === "loading" ? (
@@ -265,20 +333,22 @@ export function SearchResultsPanel() {
           <ErrorState
             title="Search unavailable"
             message={error ?? "Please try again."}
-            onRetry={() => setFilterTick((n) => n + 1)}
+            onRetry={() => {
+              setSearchMode("fallback");
+              setFilterTick((n) => n + 1);
+            }}
           />
         ) : null}
 
         {status === "ready" && results.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-outline-variant bg-surface-container-low px-lg py-xl text-center">
-            <span className="material-symbols-outlined mb-md text-4xl text-outline" aria-hidden>
-              search_off
-            </span>
-            <h2 className="font-headline-md text-headline-md">No matching properties</h2>
-            <p className="mt-xs text-body-md text-on-surface-variant">
-              Try clearing filters or refining your search.
-            </p>
-          </div>
+          <SearchEmptyState
+            onBroaden={broadenSearch}
+            onGuidedMatch={() => runQuery(query || "3BHK apartment near metro", "ai")}
+            onChip={(chip) => {
+              clearFilters();
+              runQuery(chip, "ai");
+            }}
+          />
         ) : null}
 
         {status === "ready" && results.length > 0 ? (
@@ -291,7 +361,12 @@ export function SearchResultsPanel() {
               }
             >
               {results.map((item) => (
-                <SearchResultCard key={item.propertyId} item={item} view={view} />
+                <SearchResultCard
+                  key={item.propertyId}
+                  item={item}
+                  view={view}
+                  showMatch={data?.mode === "ai"}
+                />
               ))}
             </div>
 
