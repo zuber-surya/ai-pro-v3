@@ -72,7 +72,7 @@ export const leadRepository = {
     preferredContactTime?: string | null;
     message?: string | null;
     source: string;
-    propertyId: string;
+    propertyId?: string | null;
     assigneeAgentId?: string | null;
     customerUserId?: string | null;
     idempotencyKey?: string | null;
@@ -85,7 +85,7 @@ export const leadRepository = {
         preferredContactTime: data.preferredContactTime ?? null,
         message: data.message ?? null,
         source: data.source,
-        propertyId: data.propertyId,
+        propertyId: data.propertyId ?? null,
         assigneeAgentId: data.assigneeAgentId ?? null,
         customerUserId: data.customerUserId ?? null,
         idempotencyKey: data.idempotencyKey ?? null,

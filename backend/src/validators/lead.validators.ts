@@ -17,7 +17,7 @@ export const leadCreateSchema = z.object({
   preferredContactTime: z.string().max(120).optional(),
   message: z.string().max(5000).optional(),
   source: z.string().min(1).max(80).default("property_inquire"),
-  propertyId: z.string().uuid(),
+  propertyId: z.string().uuid().optional(),
 });
 
 export const listLeadsQuerySchema = z.object({

@@ -33,7 +33,7 @@ export function HomeFooter() {
             </li>
             <li>
               <Link
-                href="/search"
+                href="/#contact"
                 className="font-body-sm text-on-surface-variant transition-colors hover:text-on-surface"
               >
                 Contact Support

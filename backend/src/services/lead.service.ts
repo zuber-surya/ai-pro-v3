@@ -6,9 +6,16 @@ import type { LeadCreateInput, ListLeadsQuery } from "../validators/lead.validat
 
 export const leadService = {
   async create(input: LeadCreateInput, actor?: AuthUser, idempotencyKey?: string) {
-    const property = await propertyRepository.findById(input.propertyId);
-    if (!property || property.status !== "published") {
-      throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
+    let assigneeAgentId: string | null = null;
+    let propertyId: string | null = null;
+
+    if (input.propertyId) {
+      const property = await propertyRepository.findById(input.propertyId);
+      if (!property || property.status !== "published") {
+        throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
+      }
+      propertyId = property.id;
+      assigneeAgentId = property.agentId;
     }
 
     if (idempotencyKey) {
@@ -28,8 +35,8 @@ export const leadService = {
       preferredContactTime: input.preferredContactTime?.trim() || null,
       message: input.message?.trim() || null,
       source: input.source.trim(),
-      propertyId: input.propertyId,
-      assigneeAgentId: property.agentId,
+      propertyId,
+      assigneeAgentId,
       customerUserId: customerUserId ?? null,
       idempotencyKey: idempotencyKey ?? null,
     });

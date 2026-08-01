@@ -23,7 +23,7 @@ export type LeadCreatePayload = {
   preferredContactTime?: string;
   message?: string;
   source: string;
-  propertyId: string;
+  propertyId?: string;
 };
 
 export function createLead(payload: LeadCreatePayload, idempotencyKey: string) {

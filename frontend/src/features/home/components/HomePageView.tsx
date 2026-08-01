@@ -3,6 +3,7 @@ import { HomeHero } from "./HomeHero";
 import { FeaturedProperties } from "./FeaturedProperties";
 import { HomeJourney } from "./HomeJourney";
 import { HomeTestimonials } from "./HomeTestimonials";
+import { HomeLeadCapture } from "./HomeLeadCapture";
 import { HomeFooter } from "./HomeFooter";
 import { HomeChatShell } from "./HomeChatShell";
 
@@ -16,6 +17,7 @@ export function HomePageView() {
         <FeaturedProperties />
         <HomeJourney />
         <HomeTestimonials />
+        <HomeLeadCapture />
       </main>
       <HomeChatShell />
       <HomeFooter />

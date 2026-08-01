@@ -129,4 +129,23 @@ describe("Lead inquire from property", () => {
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("creates homepage contact lead without propertyId", async () => {
+    const res = await request(app)
+      .post("/api/v1/leads")
+      .set("Idempotency-Key", `home-${Date.now()}`)
+      .send({
+        name: "Home Visitor",
+        email: `qa.home.lead.${Date.now()}@example.com`,
+        phone: "+91 98888 11111",
+        message: "Looking for 3BHK near metro",
+        preferredContactTime: "Weekday evenings",
+        source: "homepage_contact",
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.source).toBe("homepage_contact");
+    expect(res.body.propertyId).toBeNull();
+    expect(res.body.stage).toBe("new");
+  });
 });
+

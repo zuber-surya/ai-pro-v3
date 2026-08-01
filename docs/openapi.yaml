@@ -5477,8 +5477,19 @@ components:
     LeadCreate:
       type: object
       required:
-      - propertyId
+      - name
+      - email
+      - source
       properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        preferredContactTime:
+          type: string
         propertyId:
           type: string
           format: uuid
