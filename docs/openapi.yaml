@@ -2133,8 +2133,8 @@ paths:
       tags:
       - AI
       summary: AI property search
-      description: 'Auth: JWT Bearer. Authorization: customer, agent, admin, super_admin.
-        Gemini when mode=ai; keyword fallback when mode=fallback.'
+      description: Guest allowed. Gemini when mode=ai; filter-only when mode=fallback
+        or on AI_TIMEOUT/AI_UNAVAILABLE. Never invents inventory. Rate limited (429 RATE_LIMITED).
       responses:
         '200':
           description: Success
@@ -2142,19 +2142,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AiSearchResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error:
-                  code: 'AUTH_INVALID_CREDENTIALS'
-                  message: Human-readable error message
-                  details:
-                  - field: example
-                    issue: validation failed
         '422':
           description: Unprocessable Entity
           content:
@@ -2181,22 +2168,8 @@ paths:
                   details:
                   - field: example
                     issue: validation failed
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error:
-                  code: 'INTERNAL_ERROR'
-                  message: Human-readable error message
-                  details:
-                  - field: example
-                    issue: validation failed
       operationId: postAiSearch
-      security:
-      - bearerAuth: []
+      security: []
       requestBody:
         required: true
         content:
@@ -5625,20 +5598,90 @@ components:
         filters:
           type: object
           additionalProperties: true
+        page:
+          type: integer
+          minimum: 1
+          default: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 12
+    SearchMatchReason:
+      type: object
+      required:
+      - label
+      - matched
+      properties:
+        label:
+          type: string
+        matched:
+          type: boolean
+    AiSearchResultItem:
+      type: object
+      required:
+      - propertyId
+      - title
+      - priceAmount
+      - matchScorePercent
+      - matchReasons
+      properties:
+        propertyId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        priceAmount:
+          $ref: '#/components/schemas/PriceString'
+        priceCurrency:
+          type: string
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: number
+        areaSqFt:
+          type: number
+        city:
+          type: string
+          nullable: true
+        propertyType:
+          type: string
+        thumbnailUrl:
+          type: string
+          nullable: true
+        matchScorePercent:
+          type: integer
+          nullable: true
+          minimum: 0
+          maximum: 100
+        matchReasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchMatchReason'
     AiSearchResponse:
       type: object
       required:
       - mode
       - results
+      - meta
       properties:
         mode:
           $ref: '#/components/schemas/AiSearchMode'
         summary:
           type: string
+        queryInterpretation:
+          type: string
+        fallbackReason:
+          type: string
+          description: Present when mode=fallback due to AI failure (e.g. AI_TIMEOUT, AI_UNAVAILABLE)
+        bannerMessage:
+          type: string
         results:
           type: array
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: '#/components/schemas/AiSearchResultItem'
+        meta:
+          $ref: '#/components/schemas/Meta'
     AiChatRequest:
       type: object
       required:
