@@ -48,6 +48,10 @@ export default function HomePage() {
         </h1>
         <p className="text-body-md text-on-surface-variant">
           API base: <code>{publicEnv.apiBaseUrl}</code>
+          {" · "}
+          <a href="/search" className="text-primary underline">
+            Open search
+          </a>
         </p>
         <p className="text-body-md text-on-surface">
           Health via <code>lib/api</code>:{" "}

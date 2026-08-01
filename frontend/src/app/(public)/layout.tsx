@@ -10,10 +10,16 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           </Link>
           <nav className="hidden gap-lg md:flex" aria-label="Primary">
             <Link
-              href="/"
+              href="/search"
               className="border-b-2 border-primary pb-1 font-body-md text-body-md text-primary"
             >
               Properties
+            </Link>
+            <Link
+              href="/search"
+              className="font-body-md text-body-md text-on-surface-variant transition-colors hover:text-primary"
+            >
+              Search
             </Link>
           </nav>
           <Link
