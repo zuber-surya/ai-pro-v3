@@ -107,6 +107,11 @@ export const similarPropertiesQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(6),
 });
 
+export const featuredPropertiesQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(12),
+});
+
 export type ListPropertiesQuery = z.infer<typeof listPropertiesQuerySchema>;
 export type PropertyCreateInput = z.infer<typeof propertyCreateSchema>;
 export type PropertyUpdateInput = z.infer<typeof propertyUpdateSchema>;
@@ -115,6 +120,7 @@ export type LandmarksUpdateInput = z.infer<typeof landmarksUpdateSchema>;
 export type BulkPropertyStatusInput = z.infer<typeof bulkPropertyStatusSchema>;
 export type ExportPropertiesQuery = z.infer<typeof exportPropertiesQuerySchema>;
 export type SimilarPropertiesQuery = z.infer<typeof similarPropertiesQuerySchema>;
+export type FeaturedPropertiesQuery = z.infer<typeof featuredPropertiesQuerySchema>;
 
 /** Standard amenity names — others are treated as custom */
 export const STANDARD_AMENITIES = [

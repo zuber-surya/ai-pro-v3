@@ -12,6 +12,7 @@ import {
   amenitiesUpdateSchema,
   bulkPropertyStatusSchema,
   exportPropertiesQuerySchema,
+  featuredPropertiesQuerySchema,
   landmarksUpdateSchema,
   listPropertiesQuerySchema,
   propertyCreateSchema,
@@ -110,6 +111,15 @@ propertiesRouter.get(
     const parsed = listPropertiesQuerySchema.safeParse(req.query);
     if (!parsed.success) throw zodToAppError(parsed.error);
     res.status(200).json(await propertyService.list(parsed.data, req.authUser!));
+  }),
+);
+
+propertiesRouter.get(
+  "/featured",
+  asyncHandler(async (req, res) => {
+    const parsed = featuredPropertiesQuerySchema.safeParse(req.query);
+    if (!parsed.success) throw zodToAppError(parsed.error);
+    res.status(200).json(await propertyService.listFeatured(parsed.data));
   }),
 );
 

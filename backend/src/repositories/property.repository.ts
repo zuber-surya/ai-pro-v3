@@ -181,6 +181,31 @@ export const propertyRepository = {
     return { total, rows };
   },
 
+  async listFeatured(page: number, pageSize: number) {
+    const where: Prisma.PropertyWhereInput = {
+      status: "published",
+      featured: true,
+    };
+    const [total, rows] = await Promise.all([
+      prisma.property.count({ where }),
+      prisma.property.findMany({
+        where,
+        orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          amenities: { orderBy: { name: "asc" } },
+          images: {
+            where: { kind: "photo" },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+            take: 1,
+          },
+        },
+      }),
+    ]);
+    return { total, rows };
+  },
+
   async listSimilar(
     property: Property,
     page: number,

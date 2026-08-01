@@ -12,6 +12,7 @@ import type {
   BulkPropertyStatusInput,
   ExportPropertiesQuery,
   LandmarksUpdateInput,
+  FeaturedPropertiesQuery,
   ListPropertiesQuery,
   PropertyCreateInput,
   PropertyUpdateInput,
@@ -97,6 +98,22 @@ export const propertyService = {
       ...query,
       agentId: agentId ?? undefined,
     });
+    return {
+      data: rows.map(toPublicProperty),
+      meta: {
+        page: query.page,
+        pageSize: query.pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
+      },
+    };
+  },
+
+  async listFeatured(query: FeaturedPropertiesQuery) {
+    const { total, rows } = await propertyRepository.listFeatured(
+      query.page,
+      query.pageSize,
+    );
     return {
       data: rows.map(toPublicProperty),
       meta: {

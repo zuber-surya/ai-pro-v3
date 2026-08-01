@@ -17,6 +17,7 @@ export {
   listProperties,
   getProperty,
   getSimilarProperties,
+  getFeaturedProperties,
   propertyMediaSrc,
   createProperty,
   updateProperty,

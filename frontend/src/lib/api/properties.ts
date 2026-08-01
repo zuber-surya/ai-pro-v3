@@ -142,6 +142,10 @@ export function getSimilarProperties(
   );
 }
 
+export function getFeaturedProperties(params?: { page?: number; pageSize?: number }) {
+  return apiRequest<PaginatedProperties>(`/properties/featured${toQuery(params)}`);
+}
+
 export function propertyMediaSrc(url: string | null | undefined): string | null {
   if (!url) return null;
   if (url.startsWith("http")) return url;
