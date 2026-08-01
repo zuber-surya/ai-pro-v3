@@ -14,6 +14,7 @@ import {
 } from "@/lib/api";
 import { Skeleton } from "@/components/states/Skeleton";
 import { ErrorState } from "@/components/states/ErrorState";
+import { DetailCtas } from "./Ctas";
 
 const MapSection = dynamic(
   () => import("./MapSection").then((m) => ({ default: m.MapSection })),
@@ -465,12 +466,22 @@ export function PropertyDetailPanel({ propertyId }: { propertyId: string }) {
                       </a>
                     </div>
                   </div>
-                  <a
-                    href={`mailto:${property.agent.email}?subject=${encodeURIComponent(`Inquiry: ${property.title}`)}`}
-                    className="flex w-full items-center justify-center gap-sm rounded-lg bg-primary py-md font-label-md text-white shadow-sm transition-all hover:opacity-90"
-                  >
-                    <Icon name="chat_bubble" /> Message Agent
-                  </a>
+                  <div className="space-y-md">
+                    <a
+                      href={`mailto:${property.agent.email}?subject=${encodeURIComponent(`Inquiry: ${property.title}`)}`}
+                      className="flex w-full items-center justify-center gap-sm rounded-lg bg-primary py-md font-label-md text-white shadow-sm transition-all hover:opacity-90"
+                    >
+                      <Icon name="chat_bubble" /> Message Agent
+                    </a>
+                    {property.agent.phone ? (
+                      <a
+                        href={`tel:${property.agent.phone}`}
+                        className="flex w-full items-center justify-center gap-sm rounded-lg border border-primary py-md font-label-md text-primary transition-all hover:bg-primary/5"
+                      >
+                        <Icon name="call" /> Call Agent
+                      </a>
+                    ) : null}
+                  </div>
                 </div>
               ) : null}
 
@@ -520,26 +531,12 @@ export function PropertyDetailPanel({ propertyId }: { propertyId: string }) {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 bg-white px-lg py-md shadow-[0_-4px_24px_rgba(0,0,0,0.08)] lg:hidden">
-        <div className="mx-auto flex max-w-container-max gap-md">
-          <button
-            type="button"
-            disabled
-            title="Available in a later sprint"
-            className="flex-1 rounded-lg border border-primary py-md font-label-md text-primary opacity-60"
-          >
-            Request Callback
-          </button>
-          <button
-            type="button"
-            disabled
-            title="Available in a later sprint"
-            className="flex-1 rounded-lg bg-primary py-md font-label-md text-white opacity-60 shadow-sm"
-          >
-            Schedule Visit
-          </button>
-        </div>
-      </div>
+      <DetailCtas
+        propertyId={property.id}
+        propertyTitle={property.title}
+        agentPhone={property.agent?.phone}
+        agentEmail={property.agent?.email}
+      />
     </>
   );
 }

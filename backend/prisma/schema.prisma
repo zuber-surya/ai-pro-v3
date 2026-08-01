@@ -29,6 +29,7 @@ model User {
 
   refreshTokens RefreshToken[]
   agent         Agent?
+  leads         Lead[]
 
   @@index([role], map: "ix_users_role")
   @@map("users")
@@ -63,6 +64,7 @@ model Agent {
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   properties Property[]
+  leads      Lead[]
 
   @@index([email], map: "ix_agents_email")
   @@index([isActive], map: "ix_agents_is_active")
@@ -108,6 +110,7 @@ model Property {
   amenities PropertyAmenity[]
   images    PropertyImage[]
   landmarks NearbyLandmark[]
+  leads     Lead[]
 
   @@index([status], map: "ix_properties_status")
   @@index([price], map: "ix_properties_price")
@@ -169,4 +172,43 @@ model PropertyImage {
 
   @@index([propertyId, sortOrder], map: "ix_property_images_property_id_sort")
   @@map("property_images")
+}
+
+enum LeadStage {
+  new
+  contacted
+  qualified
+  visit_scheduled
+  negotiation
+  won
+  lost
+}
+
+model Lead {
+  id                   String    @id @default(uuid()) @db.Uuid
+  name                 String    @db.VarChar(200)
+  email                String    @db.VarChar(320)
+  phone                String?   @db.VarChar(40)
+  preferredContactTime String?   @map("preferred_contact_time") @db.VarChar(120)
+  message              String?
+  source               String    @db.VarChar(80)
+  stage                LeadStage @default(new)
+  score                Decimal?  @db.Decimal(5, 2)
+  propertyId           String?   @map("property_id") @db.Uuid
+  assigneeAgentId      String?   @map("assignee_agent_id") @db.Uuid
+  customerUserId       String?   @map("customer_user_id") @db.Uuid
+  idempotencyKey       String?   @unique @map("idempotency_key") @db.VarChar(100)
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  assignee Agent?    @relation(fields: [assigneeAgentId], references: [id], onDelete: SetNull)
+  customer User?     @relation(fields: [customerUserId], references: [id], onDelete: SetNull)
+
+  @@index([stage], map: "ix_leads_stage")
+  @@index([email], map: "ix_leads_email")
+  @@index([assigneeAgentId], map: "ix_leads_assignee")
+  @@index([propertyId], map: "ix_leads_property_id")
+  @@index([createdAt], map: "ix_leads_created_at")
+  @@map("leads")
 }

@@ -44,3 +44,13 @@ export type {
   PropertyUpdatePayload,
   PropertyImage,
 } from "./properties";
+export { createLead } from "./leads";
+export type { Lead, LeadCreatePayload } from "./leads";
+export { aiSearch, searchSuggest, searchThumbSrc } from "./search";
+export type {
+  AiSearchRequest,
+  AiSearchResponse,
+  AiSearchResultItem,
+  AiSearchFilters,
+  SearchMatchReason,
+} from "./search";
