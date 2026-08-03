@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { agentsRouter } from "./agents.routes.js";
 import { authRouter } from "./auth.routes.js";
+import { bulkRouter } from "./bulk.routes.js";
 import { cmsRouter, publicPagesRouter } from "./cms.routes.js";
 import { customerRouter } from "./customer.routes.js";
 import { favoritesRouter } from "./favorites.routes.js";
@@ -20,6 +21,7 @@ apiRouter.use("/auth", authRouter);
 apiRouter.use("/users", usersRouter);
 apiRouter.use("/agents", agentsRouter);
 apiRouter.use("/properties", propertiesRouter);
+apiRouter.use("/bulk", bulkRouter);
 apiRouter.use("/leads", leadsRouter);
 apiRouter.use("/favorites", favoritesRouter);
 apiRouter.use("/customer", customerRouter);

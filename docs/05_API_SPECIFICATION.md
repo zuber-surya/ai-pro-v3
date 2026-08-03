@@ -204,6 +204,26 @@ Primary FR linkage is summarized per tag. Exact FEAT→FR map: `08_EPICS_AND_FEA
 | POST | `/bulk/properties/sessions/{id}/import` | Import validated bulk session |
 | POST | `/bulk/properties/validate` | Validate bulk property import |
 
+**CSV template (FE parses → `POST /bulk/properties/validate` `records[]`):**
+
+| Column | Required | Notes |
+|--------|----------|-------|
+| `title` | Yes | Max 300 |
+| `price` or `priceAmount` | Yes | Positive number |
+| `propertyType` | Yes | e.g. Apartment, Villa |
+| `bedrooms` | Yes | Integer ≥ 0 |
+| `bathrooms` | Yes | Number ≥ 0 |
+| `areaSqFt` | Yes | Number ≥ 0 ( > 0 to publish) |
+| `addressLine` | Yes | Street / locality |
+| `city`, `region`, `postalCode`, `country` | No | |
+| `description` | No | |
+| `status` | No | `draft` or `published` (case-insensitive); default draft |
+| `agentId` | No | UUID |
+| `featured` | No | true/false |
+| `lat` / `lng` or `latitude` / `longitude` | No | Both recommended; missing pair → warning |
+
+Import commits **valid rows only**. Download `errors.csv` for row/field/message/suggestion.
+
 ## Core schemas
 
 See [openapi.json](./openapi.json) `components.schemas`: Error, Meta, UserPublic, Agent, Property, Lead, TokenResponse, AiSearchRequest, AiSearchResponse, AiConfig, enums.

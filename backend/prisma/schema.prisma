@@ -36,6 +36,7 @@ model User {
   notifications   Notification[]
   aiConfigsCreated AiConfig[] @relation("AiConfigCreatedBy")
   aiConfigsUpdated AiConfig[] @relation("AiConfigUpdatedBy")
+  bulkUploadSessions BulkUploadSession[]
 
   @@index([role], map: "ix_users_role")
   @@map("users")
@@ -341,4 +342,42 @@ model AiConfig {
   updatedByUser User? @relation("AiConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
 
   @@map("ai_configs")
+}
+
+model BulkUploadSession {
+  id              String   @id @default(uuid()) @db.Uuid
+  uploadedBy      String   @map("uploaded_by") @db.Uuid
+  fileName        String   @default("records.json") @map("file_name") @db.VarChar(300)
+  totalRows       Int      @default(0) @map("total_rows")
+  validRows       Int      @default(0) @map("valid_rows")
+  errorRows       Int      @default(0) @map("error_rows")
+  warningRows     Int      @default(0) @map("warning_rows")
+  status          String   @default("validated") @db.VarChar(40)
+  idempotencyKey  String?  @unique @map("idempotency_key") @db.VarChar(100)
+  validRecordsJson Json    @default("[]") @map("valid_records_json")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  uploader User                 @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
+  errors   BulkUploadRowError[]
+
+  @@index([uploadedBy, createdAt], map: "ix_bulk_upload_sessions_uploader_created")
+  @@map("bulk_upload_sessions")
+}
+
+model BulkUploadRowError {
+  id            String   @id @default(uuid()) @db.Uuid
+  sessionId     String   @map("session_id") @db.Uuid
+  rowNumber     Int      @map("row_number")
+  fieldName     String?  @map("field_name") @db.VarChar(120)
+  message       String
+  originalValue String?  @map("original_value")
+  suggestion    String?
+  severity      String   @default("error") @db.VarChar(20)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  session BulkUploadSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, rowNumber], map: "ix_bulk_upload_row_errors_session_row")
+  @@map("bulk_upload_row_errors")
 }

@@ -263,6 +263,14 @@ export function PropertyInventoryPanel() {
             <Button variant="secondary" onClick={() => void onExport()}>
               Export CSV
             </Button>
+            {canBulk ? (
+              <Link
+                href="/properties/bulk"
+                className="inline-flex items-center rounded-lg border border-outline-variant px-md py-sm font-label-md text-on-surface hover:bg-surface-container-high"
+              >
+                Bulk Upload
+              </Link>
+            ) : null}
             <Button variant="primary" onClick={() => setCreateOpen(true)}>
               Add Property
             </Button>

@@ -139,5 +139,13 @@ export type {
   CmsPageUpdate,
   CmsPageStatus,
 } from "./cms";
+export {
+  validateBulkProperties,
+  getBulkSession,
+  importBulkSession,
+  downloadBulkErrorsCsv,
+  parseCsvToRecords,
+} from "./bulk";
+export type { BulkValidateResponse, BulkSession, BulkRowIssue } from "./bulk";
 
 

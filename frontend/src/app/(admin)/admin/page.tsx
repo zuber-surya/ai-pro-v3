@@ -25,6 +25,9 @@ export default function AdminPlaceholderPage() {
       <Link href="/properties" className="text-primary hover:underline">
         Property inventory
       </Link>
+      <Link href="/properties/bulk" className="text-primary hover:underline">
+        Bulk property upload
+      </Link>
     </main>
   );
 }
