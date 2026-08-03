@@ -13,16 +13,34 @@ export class AppError extends Error {
   }
 }
 
+const SECRET_PATTERNS = [
+  /Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi,
+  /(api[_-]?key|secret|password|token|authorization)\s*[:=]\s*["']?[^\s"',}]+/gi,
+  /postgresql:\/\/[^\s"']+/gi,
+  /postgres:\/\/[^\s"']+/gi,
+];
+
+/** Strip credential-like substrings before structured logging. */
+export function redactSecrets(text: string): string {
+  let out = text;
+  for (const pattern of SECRET_PATTERNS) {
+    out = out.replace(pattern, "[REDACTED]");
+  }
+  return out;
+}
+
 function logError(req: Request, err: unknown, code: string): void {
   const requestId = getRequestId(req) ?? "unknown";
-  const message = err instanceof Error ? err.message : String(err);
+  const message = redactSecrets(err instanceof Error ? err.message : String(err));
+  const stack =
+    err instanceof Error && err.stack ? redactSecrets(err.stack) : undefined;
   console.error(
     JSON.stringify({
       level: "error",
       requestId,
       code,
       message,
-      stack: err instanceof Error ? err.stack : undefined,
+      stack,
     }),
   );
 }

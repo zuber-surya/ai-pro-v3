@@ -71,7 +71,11 @@ export function LoginForm() {
         onChange={(e) => setPassword(e.target.value)}
         error={fieldErrors.password}
       />
-      {formError ? <p className="text-body-sm text-error">{formError}</p> : null}
+      {formError ? (
+        <p className="text-body-sm text-error" role="alert">
+          {formError}
+        </p>
+      ) : null}
       <Button type="submit" variant="primary" disabled={submitting} className="w-full">
         {submitting ? "Signing in…" : "Sign In"}
       </Button>

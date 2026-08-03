@@ -7,12 +7,14 @@ import { customerRouter } from "./customer.routes.js";
 import { favoritesRouter } from "./favorites.routes.js";
 import { healthRouter } from "./health.routes.js";
 import { leadsRouter } from "./leads.routes.js";
+import { metricsRouter } from "./metrics.routes.js";
 import { notificationRulesRouter } from "./notificationRules.routes.js";
 import { notificationsRouter } from "./notifications.routes.js";
 import { propertiesRouter } from "./properties.routes.js";
 import { aiConfigRouter } from "./aiConfig.routes.js";
 import { aiSearchRouter, searchRouter } from "./search.routes.js";
 import { usersRouter } from "./users.routes.js";
+import { visitsRouter } from "./visits.routes.js";
 
 export const apiRouter = Router();
 
@@ -23,6 +25,7 @@ apiRouter.use("/agents", agentsRouter);
 apiRouter.use("/properties", propertiesRouter);
 apiRouter.use("/bulk", bulkRouter);
 apiRouter.use("/leads", leadsRouter);
+apiRouter.use("/visits", visitsRouter);
 apiRouter.use("/favorites", favoritesRouter);
 apiRouter.use("/customer", customerRouter);
 apiRouter.use("/notifications", notificationsRouter);
@@ -32,3 +35,4 @@ apiRouter.use("/pages", publicPagesRouter);
 apiRouter.use("/search", searchRouter);
 apiRouter.use("/ai", aiSearchRouter);
 apiRouter.use("/ai", aiConfigRouter);
+apiRouter.use("/metrics", metricsRouter);

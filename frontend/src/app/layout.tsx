@@ -29,7 +29,12 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-body-md antialiased`}>
-        <ApiAuthBootstrap>{children}</ApiAuthBootstrap>
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
+        <ApiAuthBootstrap>
+          <div id="main-content">{children}</div>
+        </ApiAuthBootstrap>
       </body>
     </html>
   );

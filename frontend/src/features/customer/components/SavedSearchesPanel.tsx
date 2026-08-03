@@ -9,7 +9,7 @@ import {
   savedSearchHref,
   type SavedSearch,
 } from "@/lib/api";
-import { Loader } from "@/components/states";
+import { EmptyState, ErrorState, Loader } from "@/components/states";
 import { Button } from "@/components/ui/Button";
 
 export function SavedSearchesPanel() {
@@ -53,15 +53,19 @@ export function SavedSearchesPanel() {
       </div>
 
       {loading ? (
-        <Loader />
+        <Loader label="Loading saved searches" />
       ) : error ? (
-        <p className="text-body-sm text-error" role="alert">
-          {error}
-        </p>
+        <ErrorState title="Saved searches unavailable" message={error} onRetry={() => void refresh()} />
       ) : items.length === 0 ? (
-        <p className="text-body-md text-on-surface-variant">
-          No saved searches yet. Run a search and click &ldquo;Save search&rdquo;.
-        </p>
+        <EmptyState
+          title="No saved searches yet"
+          description='Run a search and click "Save search".'
+          action={
+            <Link href="/search" className="font-label-md text-primary hover:underline">
+              Go to search
+            </Link>
+          }
+        />
       ) : (
         <ul className="divide-y divide-outline-variant">
           {items.map((item) => {

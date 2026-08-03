@@ -45,8 +45,23 @@ export type {
   PropertyUpdatePayload,
   PropertyImage,
 } from "./properties";
-export { createLead } from "./leads";
-export type { Lead, LeadCreatePayload } from "./leads";
+export {
+  createLead,
+  listLeads,
+  getLead,
+  updateLead,
+  updateLeadStage,
+  listLeadNotes,
+  createLeadNote,
+} from "./leads";
+export type {
+  Lead,
+  LeadCreatePayload,
+  LeadStage,
+  LeadUpdatePayload,
+  LeadNote,
+  PaginatedLeads,
+} from "./leads";
 export {
   listFavorites,
   listFavoriteIds,
@@ -147,5 +162,9 @@ export {
   parseCsvToRecords,
 } from "./bulk";
 export type { BulkValidateResponse, BulkSession, BulkRowIssue } from "./bulk";
+export { getMetricsDashboard, getMetricsReports } from "./metrics";
+export type { MetricsDashboard, MetricsReport, MetricsKpi } from "./metrics";
+export { createVisit } from "./visits";
+export type { Visit, VisitCreatePayload } from "./visits";
 
 

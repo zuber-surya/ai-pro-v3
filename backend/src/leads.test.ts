@@ -147,5 +147,56 @@ describe("Lead inquire from property", () => {
     expect(res.body.propertyId).toBeNull();
     expect(res.body.stage).toBe("new");
   });
+
+  it("admin can add lead manually", async () => {
+    const res = await request(app)
+      .post("/api/v1/leads")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Idempotency-Key", `manual-${Date.now()}`)
+      .send({
+        name: "Manual Lead",
+        email: `qa.manual.lead.${Date.now()}@example.com`,
+        phone: "+91 91111 22222",
+        source: "manual_add",
+        message: "Called in from walk-in",
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.source).toBe("manual_add");
+    expect(res.body.stage).toBe("new");
+  });
+
+  it("get lead by id for admin", async () => {
+    const res = await request(app)
+      .get(`/api/v1/leads/${leadId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(leadId);
+  });
+
+  it("patches stage and persists", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/leads/${leadId}/stage`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ stage: "contacted" });
+    expect(res.status).toBe(200);
+    expect(res.body.stage).toBe("contacted");
+  });
+
+  it("creates and lists notes", async () => {
+    const created = await request(app)
+      .post(`/api/v1/leads/${leadId}/notes`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ body: "Called lead — interested in weekend tour" });
+    expect(created.status).toBe(201);
+    expect(created.body.body).toContain("weekend tour");
+    expect(created.body.createdAt).toBeTruthy();
+
+    const listed = await request(app)
+      .get(`/api/v1/leads/${leadId}/notes`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(listed.status).toBe(200);
+    expect(Array.isArray(listed.body)).toBe(true);
+    expect(listed.body.some((n: { id: string }) => n.id === created.body.id)).toBe(true);
+  });
 });
 

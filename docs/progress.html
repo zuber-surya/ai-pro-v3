@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PropVista — Delivery Progress</title>
+<style>
+  :root {
+    --bg: #faf8ff;
+    --surface: #ffffff;
+    --ink: #191b23;
+    --muted: #434654;
+    --outline: #c3c6d6;
+    --primary: #003d9b;
+    --primary-soft: #dae2ff;
+    --done: #0f7b3a;
+    --done-bg: #e6f6ec;
+    --partial: #9a6700;
+    --partial-bg: #fff4d6;
+    --todo: #434654;
+    --todo-bg: #ededf8;
+    --deferred: #873da6;
+    --deferred-bg: #f8d8ff;
+    --future: #737685;
+    --future-bg: #e1e2ec;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Inter, ui-sans-serif, system-ui, Segoe UI, sans-serif;
+    background: linear-gradient(180deg, #f3f3fd 0%, var(--bg) 220px);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+  header {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px 16px;
+  }
+  header h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+    letter-spacing: -0.01em;
+    color: var(--primary);
+  }
+  header p { margin: 0; color: var(--muted); max-width: 70ch; }
+  .meta { margin-top: 12px; font-size: 13px; color: var(--muted); }
+  main { max-width: 1200px; margin: 0 auto; padding: 8px 24px 64px; }
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin: 24px 0 32px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .kpi .label { font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .kpi .value { font-size: 36px; font-weight: 700; margin-top: 6px; color: var(--primary); }
+  .kpi .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .bar {
+    height: 10px;
+    background: var(--todo-bg);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .bar > span { display: block; height: 100%; background: var(--primary); }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px 16px;
+    margin-bottom: 28px; font-size: 13px;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  }
+  .pill.done { background: var(--done-bg); color: var(--done); }
+  .pill.partial { background: var(--partial-bg); color: var(--partial); }
+  .pill.todo { background: var(--todo-bg); color: var(--todo); }
+  .pill.deferred { background: var(--deferred-bg); color: var(--deferred); }
+  .pill.future { background: var(--future-bg); color: var(--future); }
+  section {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  section h2 {
+    margin: 0 0 14px;
+    font-size: 22px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--outline); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  .sprint-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .sprint-card {
+    border: 1px solid var(--outline);
+    border-radius: 10px;
+    padding: 14px;
+    background: #faf8ff;
+  }
+  .sprint-card h3 { margin: 0 0 6px; font-size: 16px; }
+  .sprint-card .theme { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  details { margin-top: 8px; }
+  details summary { cursor: pointer; color: var(--primary); font-weight: 600; font-size: 13px; }
+  ul.stories { margin: 8px 0 0; padding-left: 18px; }
+  ul.stories li { margin: 4px 0; color: var(--muted); }
+  ul.stories li strong { color: var(--ink); font-weight: 600; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .filters button {
+    border: 1px solid var(--outline);
+    background: #fff;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+  }
+  .filters button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  @media (max-width: 800px) {
+    .kpis { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>PropVista delivery progress</h1>
+  <p>Live tracker for Epics, Features, Stories, and Sprint Plan from <code>docs/08_EPICS_AND_FEATURES.md</code> + <code>docs/09_SPRINT_PLAN.md</code>. Status reflects shipped code as of generation date (leads admin work deferred by PO).</p>
+  <p class="meta">Generated 2026-08-03 · Regenerate with <code>node scripts/generate-progress.mjs</code></p>
+</header>
+<main>
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">MVP features</div>
+      <div class="value">100%</div>
+      <div class="sub">35 done · 0 partial · 0 deferred · 0 todo / 35</div>
+      <div class="bar"><span style="width:100%"></span></div>
+    </div>
+    <div class="kpi">
+      <div class="label">MVP stories</div>
+      <div class="value">100%</div>
+      <div class="sub">80 done / 80</div>
+      <div class="bar"><span style="width:100%"></span></div>
+    </div>
+    <div class="kpi">
+      <div class="label">Sprints</div>
+      <div class="value">100%</div>
+      <div class="sub">14 complete / 14</div>
+      <div class="bar"><span style="width:100%"></span></div>
+    </div>
+    <div class="kpi">
+      <div class="label">Next up</div>
+      <div class="value" style="font-size:20px;line-height:1.3;margin-top:10px">MVP complete<br/>Ship / UAT</div>
+      <div class="sub">Commit · push · release checklist · pixel/QA samples</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="pill done">Done</span>
+    <span class="pill partial">Partial</span>
+    <span class="pill todo">To do</span>
+    <span class="pill deferred">Deferred</span>
+    <span class="pill future">Future / Out of MVP</span>
+  </div>
+
+  <section>
+    <h2>Sprint plan</h2>
+    <div class="sprint-grid">
+      <article class="sprint-card">
+          <h3>Sprint 0</h3>
+          <div class="theme">Foundation</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-00</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-00-01</strong> Repo &amp; Stack Scaffold</li><li><span class="pill done">Done</span> <strong>FEAT-00-02</strong> Design Tokens &amp; Shared UI Primitives</li><li><span class="pill done">Done</span> <strong>FEAT-00-03</strong> Centralized API Client &amp; Auth Shell</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 1</h3>
+          <div class="theme">Auth</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-01</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-01-01</strong> Register &amp; Login</li><li><span class="pill done">Done</span> <strong>FEAT-01-02</strong> Session, Logout &amp; Route Guards</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 2</h3>
+          <div class="theme">Users &amp; Agents</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-02</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-02-01</strong> User Administration</li><li><span class="pill done">Done</span> <strong>FEAT-02-02</strong> Agent Profiles</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 3</h3>
+          <div class="theme">Property Admin</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-07</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-07-01</strong> Property Inventory Admin View</li><li><span class="pill done">Done</span> <strong>FEAT-07-02</strong> Listing Editor Basic Info</li><li><span class="pill done">Done</span> <strong>FEAT-07-03</strong> Property Media (Photos + Floorplan)</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 4</h3>
+          <div class="theme">Property Public + Maps</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-05, EPIC-17</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-05-01</strong> Property Detail Page</li><li><span class="pill done">Done</span> <strong>FEAT-17-01</strong> Property Map &amp; Landmarks</li><li><span class="pill done">Done</span> <strong>FEAT-05-02</strong> Detail CTAs (Inquire / Contact / Schedule / Favorite)</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 5</h3>
+          <div class="theme">AI Search</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-04</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-04-01</strong> NLP Search API (Gemini)</li><li><span class="pill done">Done</span> <strong>FEAT-04-02</strong> Search Results Standard UI</li><li><span class="pill done">Done</span> <strong>FEAT-04-03</strong> Search Fallback &amp; Empty States</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 6</h3>
+          <div class="theme">Homepage</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-03</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-03-01</strong> Homepage Shell &amp; Marketing Sections</li><li><span class="pill done">Done</span> <strong>FEAT-03-02</strong> Homepage Lead Capture Entry</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 7</h3>
+          <div class="theme">CRM + Visits</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-09, EPIC-10</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-09-01</strong> Lead Capture &amp; List</li><li><span class="pill done">Done</span> <strong>FEAT-09-02</strong> Lead Detail MVP Subset</li><li><span class="pill done">Done</span> <strong>FEAT-10-01</strong> Schedule Visit</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 8</h3>
+          <div class="theme">Customer + Favorites</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-06, EPIC-11</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-06-01</strong> Favorites</li><li><span class="pill done">Done</span> <strong>FEAT-06-02</strong> Saved Searches</li><li><span class="pill done">Done</span> <strong>FEAT-11-01</strong> Customer Dashboard</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 9</h3>
+          <div class="theme">AI Chat + Config</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-12, EPIC-13</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-12-01</strong> AI Chatbot Widget</li><li><span class="pill done">Done</span> <strong>FEAT-12-02</strong> Loan Analysis</li><li><span class="pill done">Done</span> <strong>FEAT-13-01</strong> AI Config Admin UI</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 10</h3>
+          <div class="theme">Notifications + CMS</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-14, EPIC-15</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-14-01</strong> In-App Notifications</li><li><span class="pill done">Done</span> <strong>FEAT-14-02</strong> Email Notifications &amp; Rules</li><li><span class="pill done">Done</span> <strong>FEAT-15-01</strong> CMS Pages Admin &amp; Public</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 11</h3>
+          <div class="theme">Bulk Upload</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-08</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-08-01</strong> Bulk Upload Validate &amp; Import</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 12</h3>
+          <div class="theme">Command Center</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-16</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-16-01</strong> Command Center Dashboard</li><li><span class="pill done">Done</span> <strong>FEAT-16-02</strong> Admin Reports View</li>
+          </ul>
+        </article><article class="sprint-card">
+          <h3>Sprint 13</h3>
+          <div class="theme">Harden &amp; Ship MVP</div>
+          <span class="pill done">Done</span>
+          <div style="margin-top:10px;font-size:13px;color:var(--muted)">EPIC-18</div>
+          <ul class="stories">
+            <li><span class="pill done">Done</span> <strong>FEAT-18-01</strong> Shared UX States &amp; A11y Baseline</li><li><span class="pill done">Done</span> <strong>FEAT-18-02</strong> Health, Observability &amp; Frontend Deploy</li>
+          </ul>
+        </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Epics</h2>
+    <table>
+      <thead><tr><th>Epic</th><th>Name</th><th>Features</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+              <td><strong>EPIC-00</strong></td>
+              <td>Platform Foundation</td>
+              <td>3</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-01</strong></td>
+              <td>Authentication &amp; Session</td>
+              <td>2</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-02</strong></td>
+              <td>Users &amp; Agents Admin</td>
+              <td>2</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-03</strong></td>
+              <td>Public Homepage &amp; Marketing</td>
+              <td>2</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-04</strong></td>
+              <td>AI Search &amp; Discovery</td>
+              <td>3</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-05</strong></td>
+              <td>Public Property Details</td>
+              <td>2</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-06</strong></td>
+              <td>Favorites &amp; Saved Searches</td>
+              <td>2</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-07</strong></td>
+              <td>Property Inventory &amp; Listing Editor</td>
+              <td>3</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-08</strong></td>
+              <td>Bulk Property Upload</td>
+              <td>1</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-09</strong></td>
+              <td>CRM Leads (List + Detail)</td>
+              <td>2</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-10</strong></td>
+              <td>Visit Scheduling</td>
+              <td>1</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-11</strong></td>
+              <td>Customer Portal</td>
+              <td>1</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-12</strong></td>
+              <td>AI Chat &amp; Loan Analysis</td>
+              <td>2</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-13</strong></td>
+              <td>AI Chatbot Configuration</td>
+              <td>1</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-14</strong></td>
+              <td>Notifications (Email + In-App)</td>
+              <td>2</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-15</strong></td>
+              <td>CMS</td>
+              <td>1</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-16</strong></td>
+              <td>Admin Command Center &amp; Reports</td>
+              <td>2</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-17</strong></td>
+              <td>Maps (Leaflet + OSM)</td>
+              <td>1</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-18</strong></td>
+              <td>Cross-Cutting UX, Health &amp; Deploy</td>
+              <td>2</td>
+              <td><span class="pill done">Done</span></td>
+            </tr><tr>
+              <td><strong>EPIC-F01</strong></td>
+              <td>Lead Kanban Pipeline (FUTURE / EXCLUDED-MVP)</td>
+              <td>1</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+            </tr><tr>
+              <td><strong>EPIC-F02</strong></td>
+              <td>Activity Timeline Product (FUTURE / EXCLUDED-MVP)</td>
+              <td>1</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+            </tr><tr>
+              <td><strong>EPIC-F03</strong></td>
+              <td>Reminders &amp; Automation (FUTURE / EXCLUDED-MVP)</td>
+              <td>1</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+            </tr><tr>
+              <td><strong>EPIC-F04</strong></td>
+              <td>Virtual Tours &amp; Video Upload (FUTURE / EXCLUDED-MVP)</td>
+              <td>1</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+            </tr><tr>
+              <td><strong>EPIC-F05</strong></td>
+              <td>SMS / WhatsApp / Push (FUTURE / EXCLUDED-MVP)</td>
+              <td>1</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+            </tr><tr>
+              <td><strong>EPIC-F06</strong></td>
+              <td>Advanced CRM (Contacts / Opportunity) (FUTURE)</td>
+              <td>1</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+            </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Features &amp; stories</h2>
+    <div class="filters" id="filters">
+      <button type="button" data-filter="all" class="active">All</button>
+      <button type="button" data-filter="done">Done</button>
+      <button type="button" data-filter="partial">Partial</button>
+      <button type="button" data-filter="todo">To do</button>
+      <button type="button" data-filter="deferred">Deferred</button>
+      <button type="button" data-filter="future">Future</button>
+    </div>
+    <table id="feature-table">
+      <thead><tr><th>Feature</th><th>Epic</th><th>Status</th><th>Stories</th></tr></thead>
+      <tbody>
+        <tr data-status="done">
+              <td><strong>FEAT-00-01</strong><br/><span style="color:var(--muted)">Repo &amp; Stack Scaffold</span></td>
+              <td>EPIC-00</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-00-01-01</strong> — As a developer, I can clone and run frontend/backend with documented env vars.</li><li><span class="pill done">Done</span> <strong>STORY-00-01-02</strong> — As a developer, I have Prisma baseline schema and migrate command.</li><li><span class="pill done">Done</span> <strong>STORY-00-01-03</strong> — As a developer, health endpoint is available for smoke checks.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-00-02</strong><br/><span style="color:var(--muted)">Design Tokens &amp; Shared UI Primitives</span></td>
+              <td>EPIC-00</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-00-02-01</strong> — As a developer, I can use brand tokens from DESIGN.md.</li><li><span class="pill done">Done</span> <strong>STORY-00-02-02</strong> — As a developer, shared Loader/Empty/Error match Constitution state rules.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-00-03</strong><br/><span style="color:var(--muted)">Centralized API Client &amp; Auth Shell</span></td>
+              <td>EPIC-00</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-00-03-01</strong> — As a developer, feature hooks call API modules only.</li><li><span class="pill done">Done</span> <strong>STORY-00-03-02</strong> — As a developer, 401 triggers refresh flow contract.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-01-01</strong><br/><span style="color:var(--muted)">Register &amp; Login</span></td>
+              <td>EPIC-01</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-01-01-01</strong> — As a Guest, I can register with email and password.</li><li><span class="pill done">Done</span> <strong>STORY-01-01-02</strong> — As a user, I can log in and receive a JWT session.</li><li><span class="pill done">Done</span> <strong>STORY-01-01-03</strong> — As a user, validation errors show inline per UX rules.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-01-02</strong><br/><span style="color:var(--muted)">Session, Logout &amp; Route Guards</span></td>
+              <td>EPIC-01</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-01-02-01</strong> — As a user, I can log out and lose session.</li><li><span class="pill done">Done</span> <strong>STORY-01-02-02</strong> — As a Customer, I cannot open Admin routes.</li><li><span class="pill done">Done</span> <strong>STORY-01-02-03</strong> — As Guest, protected customer routes redirect to login.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-02-01</strong><br/><span style="color:var(--muted)">User Administration</span></td>
+              <td>EPIC-02</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-02-01-01</strong> — As Admin, I can manage user accounts.</li><li><span class="pill done">Done</span> <strong>STORY-02-01-02</strong> — As Super Admin, I can assign Admin role.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-02-02</strong><br/><span style="color:var(--muted)">Agent Profiles</span></td>
+              <td>EPIC-02</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-02-02-01</strong> — As Admin, I can create and edit agent profiles.</li><li><span class="pill done">Done</span> <strong>STORY-02-02-02</strong> — As Guest, I see agent card data on published properties.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-03-01</strong><br/><span style="color:var(--muted)">Homepage Shell &amp; Marketing Sections</span></td>
+              <td>EPIC-03</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-03-01-01</strong> — As Guest, I see PropVista branding as a hero-level signal.</li><li><span class="pill done">Done</span> <strong>STORY-03-01-02</strong> — As Guest, I can click suggestion chips into search.</li><li><span class="pill done">Done</span> <strong>STORY-03-01-03</strong> — As Guest, I see featured property cards.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-03-02</strong><br/><span style="color:var(--muted)">Homepage Lead Capture Entry</span></td>
+              <td>EPIC-03</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>1 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-03-02-01</strong> — As Guest, I can submit a contact/lead form from a public surface.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-04-01</strong><br/><span style="color:var(--muted)">NLP Search API (Gemini)</span></td>
+              <td>EPIC-04</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-04-01-01</strong> — As Guest, my NL query returns matching properties with scores.</li><li><span class="pill done">Done</span> <strong>STORY-04-01-02</strong> — As system, Gemini failure is detectable by FE without a blank page.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-04-02</strong><br/><span style="color:var(--muted)">Search Results Standard UI</span></td>
+              <td>EPIC-04</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-04-02-01</strong> — As Guest, I see AI match % and reasons.</li><li><span class="pill done">Done</span> <strong>STORY-04-02-02</strong> — As Guest, I can filter and paginate results.</li><li><span class="pill done">Done</span> <strong>STORY-04-02-03</strong> — As Customer, I can favorite from results.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-04-03</strong><br/><span style="color:var(--muted)">Search Fallback &amp; Empty States</span></td>
+              <td>EPIC-04</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-04-03-01</strong> — As Guest, when AI fails I see the fallback view.</li><li><span class="pill done">Done</span> <strong>STORY-04-03-02</strong> — As Guest, when zero matches I see the empty state.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-05-01</strong><br/><span style="color:var(--muted)">Property Detail Page</span></td>
+              <td>EPIC-05</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-05-01-01</strong> — As Guest, I can open a property and see gallery and details.</li><li><span class="pill done">Done</span> <strong>STORY-05-01-02</strong> — As Guest, I see floorplan and amenities.</li><li><span class="pill done">Done</span> <strong>STORY-05-01-03</strong> — As Guest, I see similar properties.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-05-02</strong><br/><span style="color:var(--muted)">Detail CTAs (Inquire / Contact / Schedule / Favorite)</span></td>
+              <td>EPIC-05</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-05-02-01</strong> — As Guest/Customer, I can inquire about a property.</li><li><span class="pill done">Done</span> <strong>STORY-05-02-02</strong> — As Customer, I can schedule a tour.</li><li><span class="pill done">Done</span> <strong>STORY-05-02-03</strong> — As Customer, I can save the property.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-06-01</strong><br/><span style="color:var(--muted)">Favorites</span></td>
+              <td>EPIC-06</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-06-01-01</strong> — As Customer, I can save and remove properties.</li><li><span class="pill done">Done</span> <strong>STORY-06-01-02</strong> — As Guest, favorite prompts authentication.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-06-02</strong><br/><span style="color:var(--muted)">Saved Searches</span></td>
+              <td>EPIC-06</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>1 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-06-02-01</strong> — As Customer, I can save and reopen a search.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-07-01</strong><br/><span style="color:var(--muted)">Property Inventory Admin View</span></td>
+              <td>EPIC-07</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-07-01-01</strong> — As Admin, I can manage the inventory list.</li><li><span class="pill done">Done</span> <strong>STORY-07-01-02</strong> — As Agent, I see own/assigned listings per rules.</li><li><span class="pill done">Done</span> <strong>STORY-07-01-03</strong> — As Admin, I can export CSV and bulk update status.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-07-02</strong><br/><span style="color:var(--muted)">Listing Editor Basic Info</span></td>
+              <td>EPIC-07</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-07-02-01</strong> — As Agent, I can create a draft listing.</li><li><span class="pill done">Done</span> <strong>STORY-07-02-02</strong> — As Agent, I can publish a listing.</li><li><span class="pill done">Done</span> <strong>STORY-07-02-03</strong> — As Agent, excluded video/tour controls are absent.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-07-03</strong><br/><span style="color:var(--muted)">Property Media (Photos + Floorplan)</span></td>
+              <td>EPIC-07</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-07-03-01</strong> — As Agent, I can upload property photos.</li><li><span class="pill done">Done</span> <strong>STORY-07-03-02</strong> — As Agent, I can upload a floorplan.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-08-01</strong><br/><span style="color:var(--muted)">Bulk Upload Validate &amp; Import</span></td>
+              <td>EPIC-08</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-08-01-01</strong> — As Admin, I upload and see validation results.</li><li><span class="pill done">Done</span> <strong>STORY-08-01-02</strong> — As Admin, I import only valid rows.</li><li><span class="pill done">Done</span> <strong>STORY-08-01-03</strong> — As Admin, I download an error report.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-09-01</strong><br/><span style="color:var(--muted)">Lead Capture &amp; List</span></td>
+              <td>EPIC-09</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-09-01-01</strong> — As Guest, submitting an inquiry creates a lead.</li><li><span class="pill done">Done</span> <strong>STORY-09-01-02</strong> — As Agent, I can view and add leads in a list.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-09-02</strong><br/><span style="color:var(--muted)">Lead Detail MVP Subset</span></td>
+              <td>EPIC-09</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-09-02-01</strong> — As Agent, I open lead detail and see contact + stage.</li><li><span class="pill done">Done</span> <strong>STORY-09-02-02</strong> — As Agent, I can add notes and change stage.</li><li><span class="pill done">Done</span> <strong>STORY-09-02-03</strong> — As Agent, I do not get reminder/timeline product features.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-10-01</strong><br/><span style="color:var(--muted)">Schedule Visit</span></td>
+              <td>EPIC-10</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-10-01-01</strong> — As Customer, I can schedule a property visit.</li><li><span class="pill done">Done</span> <strong>STORY-10-01-02</strong> — As Agent, I can schedule from lead detail.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-11-01</strong><br/><span style="color:var(--muted)">Customer Dashboard</span></td>
+              <td>EPIC-11</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-11-01-01</strong> — As Customer, I see dashboard stats and saved properties.</li><li><span class="pill done">Done</span> <strong>STORY-11-01-02</strong> — As Customer, I edit requirement profile.</li><li><span class="pill done">Done</span> <strong>STORY-11-01-03</strong> — As Customer, I view inquiry history.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-12-01</strong><br/><span style="color:var(--muted)">AI Chatbot Widget</span></td>
+              <td>EPIC-12</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-12-01-01</strong> — As Guest, I can open chat and send a message.</li><li><span class="pill done">Done</span> <strong>STORY-12-01-02</strong> — As Guest, I see configured greeting.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-12-02</strong><br/><span style="color:var(--muted)">Loan Analysis</span></td>
+              <td>EPIC-12</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-12-02-01</strong> — As Customer, I can run loan analysis.</li><li><span class="pill done">Done</span> <strong>STORY-12-02-02</strong> — As system, formula fallback runs if Gemini fails.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-13-01</strong><br/><span style="color:var(--muted)">AI Config Admin UI</span></td>
+              <td>EPIC-13</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>3 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-13-01-01</strong> — As Admin, I configure chatbot greeting and FAQs.</li><li><span class="pill done">Done</span> <strong>STORY-13-01-02</strong> — As Admin, I preview chat responses.</li><li><span class="pill done">Done</span> <strong>STORY-13-01-03</strong> — As Admin, I set escalation rules and tone.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-14-01</strong><br/><span style="color:var(--muted)">In-App Notifications</span></td>
+              <td>EPIC-14</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-14-01-01</strong> — As Customer, I see unread notifications.</li><li><span class="pill done">Done</span> <strong>STORY-14-01-02</strong> — As Agent, I am notified of a new lead in-app.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-14-02</strong><br/><span style="color:var(--muted)">Email Notifications &amp; Rules</span></td>
+              <td>EPIC-14</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-14-02-01</strong> — As Admin, I manage notification rules.</li><li><span class="pill done">Done</span> <strong>STORY-14-02-02</strong> — As Agent, I receive email on new lead when rule enabled.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-15-01</strong><br/><span style="color:var(--muted)">CMS Pages Admin &amp; Public</span></td>
+              <td>EPIC-15</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-15-01-01</strong> — As Admin, I edit homepage CMS content.</li><li><span class="pill done">Done</span> <strong>STORY-15-01-02</strong> — As Guest, I see published CMS-driven content.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-16-01</strong><br/><span style="color:var(--muted)">Command Center Dashboard</span></td>
+              <td>EPIC-16</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-16-01-01</strong> — As Admin, I see KPIs and charts for selected range.</li><li><span class="pill done">Done</span> <strong>STORY-16-01-02</strong> — As Admin, I filter the recent activity feed.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-16-02</strong><br/><span style="color:var(--muted)">Admin Reports View</span></td>
+              <td>EPIC-16</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>1 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-16-02-01</strong> — As Admin, I open reports view and see metrics summaries.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-17-01</strong><br/><span style="color:var(--muted)">Property Map &amp; Landmarks</span></td>
+              <td>EPIC-17</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-17-01-01</strong> — As Guest, I see property location on Leaflet map.</li><li><span class="pill done">Done</span> <strong>STORY-17-01-02</strong> — As Guest, I see nearby landmarks when available.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-18-01</strong><br/><span style="color:var(--muted)">Shared UX States &amp; A11y Baseline</span></td>
+              <td>EPIC-18</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-18-01-01</strong> — As QA, every MVP screen passes the state checklist.</li><li><span class="pill done">Done</span> <strong>STORY-18-01-02</strong> — As user, I can tab through primary controls.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="done">
+              <td><strong>FEAT-18-02</strong><br/><span style="color:var(--muted)">Health, Observability &amp; Frontend Deploy</span></td>
+              <td>EPIC-18</td>
+              <td><span class="pill done">Done</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill done">Done</span> <strong>STORY-18-02-01</strong> — As ops, I can hit health for smoke.</li><li><span class="pill done">Done</span> <strong>STORY-18-02-02</strong> — As developer, frontend deploys to Vercel per Constitution.</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="future">
+              <td><strong>FEAT-F01-01</strong><br/><span style="color:var(--muted)">Kanban Board</span></td>
+              <td>EPIC-F01</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+              <td>
+                <details>
+                  <summary>1 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill future">Future / Out of MVP</span> <strong>STORY-F01-01-01</strong> — As Agent, I manage leads on Kanban (post-MVP).</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="future">
+              <td><strong>FEAT-F02-01</strong><br/><span style="color:var(--muted)">CRM Communication Timeline</span></td>
+              <td>EPIC-F02</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+              <td>
+                <details>
+                  <summary>1 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill future">Future / Out of MVP</span> <strong>STORY-F02-01-01</strong> — As Agent, I view full communication timeline (post-MVP).</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="future">
+              <td><strong>FEAT-F03-01</strong><br/><span style="color:var(--muted)">Reminders &amp; Task Automation</span></td>
+              <td>EPIC-F03</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+              <td>
+                <details>
+                  <summary>1 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill future">Future / Out of MVP</span> <strong>STORY-F03-01-01</strong> — As Agent, I set follow-up reminders (post-MVP).</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="future">
+              <td><strong>FEAT-F04-01</strong><br/><span style="color:var(--muted)">Video &amp; Virtual Tour Media</span></td>
+              <td>EPIC-F04</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+              <td>
+                <details>
+                  <summary>1 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill future">Future / Out of MVP</span> <strong>STORY-F04-01-01</strong> — As Agent, I attach virtual tour media (post-MVP).</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="future">
+              <td><strong>FEAT-F05-01</strong><br/><span style="color:var(--muted)">Alternate Notification Channels</span></td>
+              <td>EPIC-F05</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+              <td>
+                <details>
+                  <summary>1 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill future">Future / Out of MVP</span> <strong>STORY-F05-01-01</strong> — As Admin, I enable SMS/WhatsApp/Push (post-MVP).</li>
+                  </ul>
+                </details>
+              </td>
+            </tr><tr data-status="future">
+              <td><strong>FEAT-F06-01</strong><br/><span style="color:var(--muted)">Contacts &amp; Opportunity Conversion</span></td>
+              <td>EPIC-F06</td>
+              <td><span class="pill future">Future / Out of MVP</span></td>
+              <td>
+                <details>
+                  <summary>2 stories</summary>
+                  <ul class="stories">
+                    <li><span class="pill future">Future / Out of MVP</span> <strong>STORY-F06-01-01</strong> — As Agent, I convert lead to opportunity (post-MVP).</li><li><span class="pill future">Future / Out of MVP</span> <strong>STORY-F06-01-02</strong> — As Agent, I manage contacts module (post-MVP).</li>
+                  </ul>
+                </details>
+              </td>
+            </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+<script>
+  const buttons = document.querySelectorAll('#filters button');
+  const rows = document.querySelectorAll('#feature-table tbody tr');
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      buttons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      rows.forEach((row) => {
+        row.style.display = filter === 'all' || row.dataset.status === filter ? '' : 'none';
+      });
+    });
+  });
+</script>
+</body>
+</html>

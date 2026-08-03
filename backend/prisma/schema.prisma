@@ -37,6 +37,9 @@ model User {
   aiConfigsCreated AiConfig[] @relation("AiConfigCreatedBy")
   aiConfigsUpdated AiConfig[] @relation("AiConfigUpdatedBy")
   bulkUploadSessions BulkUploadSession[]
+  leadNotes         LeadNote[]
+  visitsRequested   Visit[] @relation("VisitCustomer")
+  visitsCreated     Visit[] @relation("VisitCreatedBy")
 
   @@index([role], map: "ix_users_role")
   @@map("users")
@@ -119,6 +122,8 @@ model Property {
   landmarks NearbyLandmark[]
   leads     Lead[]
   favorites Favorite[]
+  viewEvents PropertyViewEvent[]
+  visits    Visit[]
 
   @@index([status], map: "ix_properties_status")
   @@index([price], map: "ix_properties_price")
@@ -261,6 +266,8 @@ model Lead {
   property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   assignee Agent?    @relation(fields: [assigneeAgentId], references: [id], onDelete: SetNull)
   customer User?     @relation(fields: [customerUserId], references: [id], onDelete: SetNull)
+  notes    LeadNote[]
+  visits   Visit[]
 
   @@index([stage], map: "ix_leads_stage")
   @@index([email], map: "ix_leads_email")
@@ -268,6 +275,53 @@ model Lead {
   @@index([propertyId], map: "ix_leads_property_id")
   @@index([createdAt], map: "ix_leads_created_at")
   @@map("leads")
+}
+
+model LeadNote {
+  id        String   @id @default(uuid()) @db.Uuid
+  leadId    String   @map("lead_id") @db.Uuid
+  authorId  String?  @map("author_id") @db.Uuid
+  body      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  lead   Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([leadId, createdAt], map: "ix_lead_notes_lead_id_created_at")
+  @@map("lead_notes")
+}
+
+enum VisitStatus {
+  requested
+  confirmed
+  cancelled
+  completed
+}
+
+model Visit {
+  id              String      @id @default(uuid()) @db.Uuid
+  propertyId      String      @map("property_id") @db.Uuid
+  scheduledAt     DateTime    @map("scheduled_at")
+  status          VisitStatus @default(requested)
+  notes           String?
+  customerUserId  String?     @map("customer_user_id") @db.Uuid
+  createdByUserId String?     @map("created_by_user_id") @db.Uuid
+  leadId          String?     @map("lead_id") @db.Uuid
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  property  Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  customer  User?    @relation("VisitCustomer", fields: [customerUserId], references: [id], onDelete: SetNull)
+  createdBy User?    @relation("VisitCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  lead      Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([propertyId], map: "ix_visits_property_id")
+  @@index([scheduledAt], map: "ix_visits_scheduled_at")
+  @@index([status], map: "ix_visits_status")
+  @@index([customerUserId], map: "ix_visits_customer_user_id")
+  @@index([leadId], map: "ix_visits_lead_id")
+  @@map("visits")
 }
 
 model Notification {
@@ -342,6 +396,36 @@ model AiConfig {
   updatedByUser User? @relation("AiConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
 
   @@map("ai_configs")
+}
+
+model PropertyViewEvent {
+  id           String   @id @default(uuid()) @db.Uuid
+  propertyId   String   @map("property_id") @db.Uuid
+  viewerUserId String?  @map("viewer_user_id") @db.Uuid
+  sessionId    String?  @map("session_id") @db.VarChar(100)
+  viewedAt     DateTime @default(now()) @map("viewed_at")
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, viewedAt], map: "ix_property_view_events_property_viewed")
+  @@index([viewedAt], map: "ix_property_view_events_viewed_at")
+  @@map("property_view_events")
+}
+
+model MetricsDailySnapshot {
+  id                    String   @id @default(uuid()) @db.Uuid
+  snapshotDate          DateTime @map("snapshot_date") @db.Date
+  activeListings        Int      @default(0) @map("active_listings")
+  activeLeads           Int      @default(0) @map("active_leads")
+  conversionRate        Decimal  @default(0) @map("conversion_rate") @db.Decimal(7, 4)
+  sessionsCount         Int      @default(0) @map("sessions_count")
+  leadSourcesJson       Json?    @map("lead_sources_json")
+  stageDistributionJson Json?    @map("stage_distribution_json")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@unique([snapshotDate], map: "uq_metrics_daily_snapshots_date")
+  @@map("metrics_daily_snapshots")
 }
 
 model BulkUploadSession {

@@ -4,6 +4,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { AppError, createLead } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { useFavoriteToggle } from "@/features/favorites";
+import { ScheduleVisitModal } from "@/features/scheduling";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
@@ -36,6 +37,7 @@ export function DetailCtas({
     toggle: toggleFavorite,
   } = useFavoriteToggle(propertyId, `/properties/${propertyId}`);
   const [mode, setMode] = useState<CtaMode>(null);
+  const [authScheduleOpen, setAuthScheduleOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -63,6 +65,17 @@ export function DetailCtas({
       setEmail(user.email ?? "");
       setPhone(user.phone ?? "");
     }
+  }
+
+  function openSchedule() {
+    const user = getCurrentUser();
+    if (user && ["customer", "agent", "admin", "super_admin"].includes(user.role)) {
+      setAuthScheduleOpen(true);
+      setSuccess(null);
+      setError(null);
+      return;
+    }
+    open("schedule");
   }
 
   function close() {
@@ -115,7 +128,9 @@ export function DetailCtas({
           email: email.trim(),
           phone: phone.trim() || undefined,
           preferredContactTime:
-            mode === "callback" ? preferredTime.trim() || undefined : preferredTime.trim() || undefined,
+            mode === "callback"
+              ? preferredTime.trim() || undefined
+              : preferredTime.trim() || undefined,
           message: composedMessage || undefined,
           source,
           propertyId,
@@ -146,7 +161,7 @@ export function DetailCtas({
 
   return (
     <>
-      {success && !mode ? (
+      {success && !mode && !authScheduleOpen ? (
         <div
           className="fixed bottom-24 left-1/2 z-40 w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl border border-outline-variant bg-white px-md py-sm text-center font-body-sm text-on-surface shadow-level-2 lg:bottom-8"
           role="status"
@@ -167,7 +182,7 @@ export function DetailCtas({
           <button
             type="button"
             className="flex-1 rounded-lg bg-primary py-md font-label-md text-white shadow-sm hover:opacity-90"
-            onClick={() => open("schedule")}
+            onClick={openSchedule}
           >
             Schedule Visit
           </button>
@@ -194,7 +209,7 @@ export function DetailCtas({
         </button>
         <button
           type="button"
-          onClick={() => open("schedule")}
+          onClick={openSchedule}
           className="flex items-center gap-md rounded-full border border-outline-variant bg-white px-lg py-md font-label-md text-on-surface shadow-level-2 hover:shadow-lg"
         >
           <span className="material-symbols-outlined text-primary" aria-hidden>
@@ -253,6 +268,15 @@ export function DetailCtas({
           </a>
         ) : null}
       </div>
+
+      <ScheduleVisitModal
+        open={authScheduleOpen}
+        onClose={() => setAuthScheduleOpen(false)}
+        propertyId={propertyId}
+        onCreated={() =>
+          setSuccess("Visit request submitted. An agent will confirm shortly.")
+        }
+      />
 
       <Modal open={mode != null} title={title} onClose={close}>
         {success ? (

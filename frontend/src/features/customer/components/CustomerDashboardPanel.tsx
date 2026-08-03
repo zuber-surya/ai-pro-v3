@@ -14,7 +14,7 @@ import {
   type CustomerProfile,
   type NotificationItem,
 } from "@/lib/api";
-import { Loader } from "@/components/states";
+import { ErrorState, Loader } from "@/components/states";
 import { CustomerShell } from "./CustomerShell";
 import { RequirementProfileEditor } from "./RequirementProfileEditor";
 import { SavedSearchesPanel } from "./SavedSearchesPanel";
@@ -81,9 +81,11 @@ export function CustomerDashboardPanel() {
   if (status === "error" || !dash || !profile) {
     return (
       <CustomerShell>
-        <p className="text-body-md text-error" role="alert">
-          {error ?? "Failed to load"}
-        </p>
+        <ErrorState
+          title="Dashboard unavailable"
+          message={error ?? "Failed to load"}
+          onRetry={() => window.location.reload()}
+        />
       </CustomerShell>
     );
   }

@@ -19,6 +19,7 @@ import type {
   SimilarPropertiesQuery,
 } from "../validators/property.validators.js";
 import { STANDARD_AMENITIES } from "../validators/property.validators.js";
+import { metricsService } from "./metrics.service.js";
 
 async function resolveAgentScope(actor: AuthUser): Promise<string | null | undefined> {
   if (actor.role === "admin" || actor.role === "super_admin") {
@@ -133,6 +134,14 @@ export const propertyService = {
       if (property.status !== "published") {
         throw new AppError("RESOURCE_NOT_FOUND", "Property not found", 404);
       }
+      void metricsService
+        .recordPropertyView({
+          propertyId: id,
+          viewerUserId: actor?.id ?? null,
+        })
+        .catch(() => {
+          /* non-blocking metrics */
+        });
       return toPropertyDetail(property);
     }
 

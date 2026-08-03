@@ -673,6 +673,15 @@ QA signature: __________________
 |-----|--------|
 | none | |
 
+### FEAT-18-01 residual gaps (filed 2026-08-03)
+
+| Gap | Severity | Ticket / note |
+|-----|----------|---------------|
+| SCR-CLIENTS / SCR-LEAD-D full CRM UI deferred | Medium | FEAT-09 / FEAT-10 (end of backlog) |
+| Homepage featured card `alt=""` decorative only — titles in text | Low | Optional enrich when CMS media has captions |
+| Pixel-perfect pass not re-run for every SCR-* after FEAT-16 | Medium | TASK-18-01-QA-01 sample set pending |
+| Search filter drawer focus trap (if present) not audited | Low | Follow-up with SCR-SEARCH keyboard pass |
+
 ### Decision
 - [ ] Ready for QA
 - [ ] Not ready

@@ -34,19 +34,19 @@
 
 | Field | Value |
 |-------|--------|
-| **Release name / version** | e.g. `v1.0.0-mvp` |
-| **Release type** | Major · Minor · Patch · Hotfix |
-| **Target environment** | Production |
-| **Git commit SHA** | |
-| **Git tag** | |
+| **Release name / version** | `v0.1.0-rc` (MVP hardening — FEAT-18-02 packet started) |
+| **Release type** | Minor · Patch |
+| **Target environment** | Staging first → Production |
+| **Git commit SHA** | _(fill at freeze)_ |
+| **Git tag** | _(fill at freeze)_ |
 | **Release manager** | |
 | **Tech lead** | |
 | **QA lead** | |
 | **Product Owner** | |
 | **Planned deploy window (UTC)** | |
-| **Related sprint(s)** | |
-| **Epic/Feature scope** | |
-| **Out of scope / deferred** | |
+| **Related sprint(s)** | Sprint 13 |
+| **Epic/Feature scope** | FEAT-18-01 UX/a11y · FEAT-18-02 health/Vercel · prior MVP features |
+| **Out of scope / deferred** | FEAT-09/10 leads & visits (end of backlog) |
 
 ---
 
@@ -290,6 +290,32 @@ ETA: ____________________________________
 | DP5 | Zero-downtime or maintained window communicated | ☐ | |
 | DP6 | CDN/cache purge if required | ☐ | |
 | DP7 | Deploy executed from tagged release SHA only | ☐ | |
+
+### FEAT-18-02 — Frontend Vercel path (started)
+
+| Item | Guidance |
+|------|----------|
+| Vercel root directory | `frontend` (monorepo) |
+| Config file | `frontend/vercel.json` |
+| Framework | Next.js (auto-detected) |
+| Staging | Vercel **Preview** deployments on PRs / branch |
+| Production | Vercel **Production** from `main` (or release tag promote) |
+| Required FE env | `NEXT_PUBLIC_API_BASE_URL` → public API `/api/v1` base (no trailing secrets) |
+| Forbidden on FE | `DATABASE_URL`, JWT secrets, `GEMINI_API_KEY`, email provider keys |
+| CORS | Backend `CORS_ORIGIN` must include the Vercel FE origin(s) |
+| FE rollback | Vercel → Deployments → select prior Production → Promote |
+| Health monitor | `GET {API}/health` → `status=ok`, `checks.database=up` |
+
+**Local / staging smoke pack (post-deploy)**
+
+| # | Check | Pass | Evidence |
+|---|-------|------|----------|
+| SP1 | `GET /api/v1/health` → 200 `status=ok` | ☐ | |
+| SP2 | Login (customer + admin) | ☐ | |
+| SP3 | Property list/detail | ☐ | |
+| SP4 | AI search or fallback UI | ☐ | |
+| SP5 | Lead capture CTA | ☐ | |
+| SP6 | Admin command center loads | ☐ | |
 
 ---
 

@@ -7,7 +7,7 @@ import {
   propertyMediaSrc,
   type Property,
 } from "@/lib/api";
-import { Loader } from "@/components/states";
+import { EmptyState, ErrorState, Loader } from "@/components/states";
 import { useFavoriteToggle } from "@/features/favorites";
 
 /** Design-reference match chips for curated homepage strip (98 / 94 / 89). */
@@ -51,7 +51,11 @@ function FeaturedCard({ property, matchScore }: { property: Property; matchScore
       <div className="relative h-64">
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt="" className="h-full w-full object-cover" />
+          <img
+            src={cover}
+            alt={property.title}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-surface-container text-on-surface-variant">
             <span className="material-symbols-outlined text-4xl" aria-hidden>
@@ -188,18 +192,20 @@ export function FeaturedProperties({
 
       {loading ? (
         <div className="flex justify-center py-xl">
-          <Loader />
+          <Loader label="Loading featured properties" />
         </div>
       ) : error ? (
-        <p className="font-body-md text-error">{error}</p>
+        <ErrorState title="Featured listings unavailable" message={error} />
       ) : items.length === 0 ? (
-        <p className="font-body-md text-on-surface-variant">
-          No featured listings yet.{" "}
-          <Link href="/search" className="text-primary hover:underline">
-            Browse all properties
-          </Link>
-          .
-        </p>
+        <EmptyState
+          title="No featured listings yet"
+          description="Browse the full catalog while inventory is curated."
+          action={
+            <Link href="/search" className="font-label-md text-primary hover:underline">
+              Browse all properties
+            </Link>
+          }
+        />
       ) : (
         <div className="no-scrollbar -mx-xl flex gap-lg overflow-x-auto px-xl pb-lg">
           {items.map((p, index) => (
