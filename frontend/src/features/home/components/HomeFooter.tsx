@@ -67,10 +67,20 @@ export function HomeFooter() {
           <h4 className="font-label-md uppercase tracking-wider text-on-surface">Legal</h4>
           <ul className="space-y-xs">
             <li>
-              <span className="font-body-sm text-on-surface-variant underline">Privacy Policy</span>
+              <Link
+                href="/pages/privacy"
+                className="font-body-sm text-on-surface-variant underline transition-colors hover:text-on-surface"
+              >
+                Privacy Policy
+              </Link>
             </li>
             <li>
-              <span className="font-body-sm text-on-surface-variant underline">Terms of Service</span>
+              <Link
+                href="/pages/terms"
+                className="font-body-sm text-on-surface-variant underline transition-colors hover:text-on-surface"
+              >
+                Terms of Service
+              </Link>
             </li>
             <li>
               <span className="font-body-sm text-on-surface-variant underline">Cookie Policy</span>

@@ -1,2 +1,1 @@
-/** Feature types: notifications */
-
+export type { NotificationItem } from "@/lib/api";

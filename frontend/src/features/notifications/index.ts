@@ -1,2 +1,1 @@
-/** Public exports for feature: notifications */
-
+export { NotificationsBell } from "./NotificationsBell";

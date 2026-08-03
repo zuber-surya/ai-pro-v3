@@ -55,7 +55,7 @@ export type PropertyDetail = PublicProperty & {
   landmarks: PublicLandmark[];
 };
 
-type PropertyWithRelations = Property & {
+export type PropertyWithRelations = Property & {
   amenities?: PropertyAmenity[];
   images?: PropertyImage[];
   agent?: Agent | null;

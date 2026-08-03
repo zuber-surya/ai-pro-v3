@@ -8,8 +8,15 @@ export type GeminiGenerateJsonOptions = {
   timeoutMs?: number;
 };
 
+export type GeminiGenerateTextOptions = {
+  prompt: string;
+  system?: string;
+  timeoutMs?: number;
+};
+
 export type GeminiClient = {
   generateJson<T>(options: GeminiGenerateJsonOptions): Promise<T>;
+  generateText(options: GeminiGenerateTextOptions): Promise<string>;
 };
 
 function extractJson(text: string): unknown {
@@ -34,17 +41,39 @@ export function createGeminiClient(apiKey = env.GEMINI_API_KEY): GeminiClient {
       async generateJson() {
         throw new AppError("AI_UNAVAILABLE", "GEMINI_API_KEY is not configured", 503);
       },
+      async generateText() {
+        throw new AppError("AI_UNAVAILABLE", "GEMINI_API_KEY is not configured", 503);
+      },
     };
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
+  const jsonModel = genAI.getGenerativeModel({
     model: env.GEMINI_MODEL,
     generationConfig: {
       temperature: 0.2,
       responseMimeType: "application/json",
     },
   });
+  const textModel = genAI.getGenerativeModel({
+    model: env.GEMINI_MODEL,
+    generationConfig: {
+      temperature: 0.4,
+    },
+  });
+
+  async function runGenerate(
+    model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+    fullPrompt: string,
+    timeoutMs: number,
+  ) {
+    return Promise.race([
+      model.generateContent(fullPrompt),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new AppError("AI_TIMEOUT", "Gemini request timed out", 504)), timeoutMs);
+      }),
+    ]);
+  }
 
   return {
     async generateJson<T>({ prompt, system, timeoutMs }: GeminiGenerateJsonOptions): Promise<T> {
@@ -52,14 +81,26 @@ export function createGeminiClient(apiKey = env.GEMINI_API_KEY): GeminiClient {
       const fullPrompt = system ? `${system}\n\n${prompt}` : prompt;
 
       try {
-        const result = await Promise.race([
-          model.generateContent(fullPrompt),
-          new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new AppError("AI_TIMEOUT", "Gemini request timed out", 504)), ms);
-          }),
-        ]);
+        const result = await runGenerate(jsonModel, fullPrompt, ms);
         const text = result.response.text();
         return extractJson(text) as T;
+      } catch (err) {
+        if (err instanceof AppError) throw err;
+        throw new AppError("AI_UNAVAILABLE", "Gemini request failed", 503);
+      }
+    },
+
+    async generateText({ prompt, system, timeoutMs }: GeminiGenerateTextOptions): Promise<string> {
+      const ms = timeoutMs ?? env.AI_CHAT_TIMEOUT_MS;
+      const fullPrompt = system ? `${system}\n\n${prompt}` : prompt;
+
+      try {
+        const result = await runGenerate(textModel, fullPrompt, ms);
+        const text = result.response.text()?.trim();
+        if (!text) {
+          throw new AppError("AI_UNAVAILABLE", "Gemini returned an empty reply", 503);
+        }
+        return text;
       } catch (err) {
         if (err instanceof AppError) throw err;
         throw new AppError("AI_UNAVAILABLE", "Gemini request failed", 503);

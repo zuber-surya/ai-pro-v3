@@ -1,4 +1,4 @@
-/** Static homepage marketing content (CMS later — FEAT-15). */
+/** Static homepage marketing fallbacks when CMS is unavailable. */
 
 export const POPULAR_SEARCHES = [
   "Pet-friendly in Indiranagar",

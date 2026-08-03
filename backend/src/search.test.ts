@@ -117,6 +117,9 @@ describe("AI search API", () => {
 
   it("AI mode ranks only inventory ids from mocked Gemini", async () => {
     const mock: GeminiClient = {
+      async generateText() {
+        return "";
+      },
       async generateJson(options) {
         if (options.prompt.includes("Extract filters")) {
           return {
@@ -167,6 +170,9 @@ describe("AI search API", () => {
 
   it("falls back on Gemini timeout", async () => {
     setGeminiClientForTests({
+      async generateText() {
+        return "";
+      },
       async generateJson() {
         throw new AppError("AI_TIMEOUT", "Gemini request timed out", 504);
       },

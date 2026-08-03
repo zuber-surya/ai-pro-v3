@@ -13,6 +13,15 @@ export default function AdminPlaceholderPage() {
       <Link href="/admin/agents" className="text-primary hover:underline">
         Manage agents
       </Link>
+      <Link href="/admin/ai-config" className="text-primary hover:underline">
+        AI configuration
+      </Link>
+      <Link href="/admin/notification-rules" className="text-primary hover:underline">
+        Notification rules
+      </Link>
+      <Link href="/admin/cms" className="text-primary hover:underline">
+        CMS
+      </Link>
       <Link href="/properties" className="text-primary hover:underline">
         Property inventory
       </Link>

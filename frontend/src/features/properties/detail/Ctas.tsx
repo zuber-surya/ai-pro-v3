@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { AppError, createLead } from "@/lib/api";
-import { getAccessToken, getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
+import { useFavoriteToggle } from "@/features/favorites";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
@@ -30,7 +30,11 @@ export function DetailCtas({
   agentPhone,
   agentEmail,
 }: DetailCtasProps) {
-  const router = useRouter();
+  const {
+    favorited,
+    busy: favoriteBusy,
+    toggle: toggleFavorite,
+  } = useFavoriteToggle(propertyId, `/properties/${propertyId}`);
   const [mode, setMode] = useState<CtaMode>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -66,12 +70,20 @@ export function DetailCtas({
     setMode(null);
   }
 
-  function onFavorite() {
-    if (!getAccessToken() && !getCurrentUser()) {
-      router.push(`/login?next=${encodeURIComponent(`/properties/${propertyId}`)}`);
+  async function onFavorite() {
+    setError(null);
+    const result = await toggleFavorite();
+    if (result.ok) {
+      setSuccess(result.favorited ? "Saved to favorites." : "Removed from favorites.");
       return;
     }
-    setSuccess("Favorites will be available soon. You’re signed in.");
+    if (result.reason === "role") {
+      setError("Sign in as a customer to save favorites.");
+      return;
+    }
+    if (result.reason === "api") {
+      setError("Could not update favorite. Try again.");
+    }
   }
 
   async function onSubmit(e: FormEvent) {
@@ -165,14 +177,20 @@ export function DetailCtas({
       <div className="fixed bottom-8 right-8 z-40 hidden flex-col gap-md lg:flex">
         <button
           type="button"
-          onClick={onFavorite}
+          onClick={() => void onFavorite()}
+          disabled={favoriteBusy}
           className="flex items-center gap-md rounded-full border border-outline-variant bg-white px-lg py-md font-label-md text-on-surface shadow-level-2 hover:shadow-lg"
-          aria-label="Save favorite"
+          aria-label={favorited ? "Remove favorite" : "Save favorite"}
+          aria-pressed={favorited}
         >
-          <span className="material-symbols-outlined text-primary" aria-hidden>
+          <span
+            className={`material-symbols-outlined ${favorited ? "text-error" : "text-primary"}`}
+            style={favorited ? { fontVariationSettings: "'FILL' 1" } : undefined}
+            aria-hidden
+          >
             favorite
           </span>
-          Favorite
+          {favorited ? "Favorited" : "Favorite"}
         </button>
         <button
           type="button"
@@ -210,8 +228,13 @@ export function DetailCtas({
         <Button type="button" variant="secondary" onClick={() => open("inquire")}>
           Inquire
         </Button>
-        <Button type="button" variant="ghost" onClick={onFavorite}>
-          Favorite
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={favoriteBusy}
+          onClick={() => void onFavorite()}
+        >
+          {favorited ? "Favorited" : "Favorite"}
         </Button>
         {tel ? (
           <a

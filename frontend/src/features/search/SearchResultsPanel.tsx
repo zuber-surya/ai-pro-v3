@@ -18,6 +18,7 @@ import {
 } from "./SearchFiltersPanel";
 import { SearchFallbackBanner } from "./fallback/SearchFallbackBanner";
 import { SearchEmptyState } from "./empty/SearchEmptyState";
+import { SaveSearchButton } from "./SaveSearchButton";
 
 function toApiFilters(ui: SearchUiFilters): AiSearchFilters {
   const filters: AiSearchFilters = {};
@@ -247,7 +248,8 @@ export function SearchResultsPanel() {
               </p>
             ) : null}
           </div>
-          <div className="flex items-center gap-sm self-end sm:self-auto">
+          <div className="flex flex-wrap items-center gap-sm self-end sm:self-auto">
+            <SaveSearchButton query={query} mode={searchMode} filters={filters} />
             <form onSubmit={onSearchSubmit} className="relative hidden lg:block">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">
                 search

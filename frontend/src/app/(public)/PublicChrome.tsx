@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { NotificationsBell } from "@/features/notifications";
+import { getAccessToken, getCurrentUser } from "@/lib/auth";
 
 /** Shared chrome for public routes except homepage (SCR-HOME has its own). */
 export function PublicChrome({ children }: { children: React.ReactNode }) {
@@ -9,6 +11,8 @@ export function PublicChrome({ children }: { children: React.ReactNode }) {
   if (pathname === "/") {
     return <>{children}</>;
   }
+
+  const authed = Boolean(getAccessToken() || getCurrentUser());
 
   return (
     <div className="min-h-screen bg-background pb-24 text-on-surface lg:pb-0">
@@ -31,12 +35,24 @@ export function PublicChrome({ children }: { children: React.ReactNode }) {
               Search
             </Link>
           </nav>
-          <Link
-            href="/login"
-            className="rounded-lg bg-primary px-md py-xs font-label-md text-on-primary hover:opacity-90"
-          >
-            Sign in
-          </Link>
+          {authed ? (
+            <div className="flex items-center gap-md">
+              <NotificationsBell />
+              <Link
+                href="/customer"
+                className="rounded-lg bg-primary px-md py-xs font-label-md text-on-primary hover:opacity-90"
+              >
+                Account
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-lg bg-primary px-md py-xs font-label-md text-on-primary hover:opacity-90"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </header>
       {children}

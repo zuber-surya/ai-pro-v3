@@ -30,6 +30,12 @@ model User {
   refreshTokens RefreshToken[]
   agent         Agent?
   leads         Lead[]
+  favorites       Favorite[]
+  savedSearches   SavedSearch[]
+  customerProfile CustomerProfile?
+  notifications   Notification[]
+  aiConfigsCreated AiConfig[] @relation("AiConfigCreatedBy")
+  aiConfigsUpdated AiConfig[] @relation("AiConfigUpdatedBy")
 
   @@index([role], map: "ix_users_role")
   @@map("users")
@@ -111,6 +117,7 @@ model Property {
   images    PropertyImage[]
   landmarks NearbyLandmark[]
   leads     Lead[]
+  favorites Favorite[]
 
   @@index([status], map: "ix_properties_status")
   @@index([price], map: "ix_properties_price")
@@ -174,6 +181,55 @@ model PropertyImage {
   @@map("property_images")
 }
 
+model Favorite {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  propertyId String   @map("property_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId], map: "uq_favorites_user_property")
+  @@index([propertyId], map: "ix_favorites_property_id")
+  @@index([userId], map: "ix_favorites_user_id")
+  @@map("favorites")
+}
+
+model SavedSearch {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String   @db.VarChar(200)
+  queryText   String?  @map("query_text")
+  filtersJson Json?    @map("filters_json")
+  notifyVia   String?  @map("notify_via") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "ix_saved_searches_user_id")
+  @@map("saved_searches")
+}
+
+model CustomerProfile {
+  id                       String   @id @default(uuid()) @db.Uuid
+  userId                   String   @unique @map("user_id") @db.Uuid
+  budgetMin                Decimal? @map("budget_min") @db.Decimal(14, 2)
+  budgetMax                Decimal? @map("budget_max") @db.Decimal(14, 2)
+  propertyTypesJson        Json?    @map("property_types_json")
+  bedsMin                  Int?     @map("beds_min")
+  locationPreferencesJson  Json?    @map("location_preferences_json")
+  completionPct            Int      @default(0) @map("completion_pct")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("customer_profiles")
+}
+
 enum LeadStage {
   new
   contacted
@@ -211,4 +267,78 @@ model Lead {
   @@index([propertyId], map: "ix_leads_property_id")
   @@index([createdAt], map: "ix_leads_created_at")
   @@map("leads")
+}
+
+model Notification {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  type        String    @db.VarChar(80)
+  title       String    @db.VarChar(300)
+  body        String?
+  payloadJson Json?     @map("payload_json")
+  readAt      DateTime? @map("read_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt], map: "ix_notifications_user_id_created_at")
+  @@map("notifications")
+}
+
+enum NotificationChannel {
+  email
+  in_app
+}
+
+model NotificationRule {
+  id          String              @id @default(uuid()) @db.Uuid
+  eventType   String              @map("event_type") @db.VarChar(80)
+  channel     NotificationChannel
+  isEnabled   Boolean             @default(true) @map("is_enabled")
+  templateKey String?             @map("template_key") @db.VarChar(120)
+  configJson  Json?               @map("config_json")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  createdBy   String?             @map("created_by") @db.Uuid
+  updatedBy   String?             @map("updated_by") @db.Uuid
+
+  @@unique([eventType, channel], map: "uq_notification_rules_event_channel")
+  @@map("notification_rules")
+}
+
+model CmsPage {
+  id          String    @id @default(uuid()) @db.Uuid
+  slug        String    @unique @db.VarChar(160)
+  title       String    @db.VarChar(300)
+  bodyJson    Json      @map("body_json")
+  isPublished Boolean   @default(false) @map("is_published")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  createdBy   String?   @map("created_by") @db.Uuid
+  updatedBy   String?   @map("updated_by") @db.Uuid
+
+  @@index([isPublished], map: "ix_cms_pages_published")
+  @@map("cms_pages")
+}
+
+model AiConfig {
+  id             String   @id @default(uuid()) @db.Uuid
+  key            String   @unique @db.VarChar(80)
+  greeting       String
+  faqsJson       Json     @default("[]") @map("faqs_json")
+  escalationJson Json     @default("{}") @map("escalation_json")
+  tone           String?  @db.VarChar(40)
+  promptsJson    Json     @default("{}") @map("prompts_json")
+  modelLabel     String   @default("gemini") @map("model_label") @db.VarChar(80)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdBy      String?  @map("created_by") @db.Uuid
+  updatedBy      String?  @map("updated_by") @db.Uuid
+
+  createdByUser User? @relation("AiConfigCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User? @relation("AiConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("ai_configs")
 }

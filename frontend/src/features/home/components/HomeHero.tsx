@@ -3,10 +3,23 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { POPULAR_SEARCHES } from "../content";
+import type { HomepageHeroCms } from "@/features/cms";
 
-export function HomeHero() {
+export function HomeHero({ cms }: { cms?: HomepageHeroCms }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
+
+  const eyebrow = cms?.eyebrow ?? "AI-Powered Search Engine";
+  const headline = cms?.headline ?? "Find your next home with Intelligence.";
+  const highlight = cms?.headlineHighlight ?? "Intelligence";
+  const subheadline =
+    cms?.subheadline ??
+    "Skip the filters. Just tell our AI exactly what you're looking for in plain English.";
+  const placeholder = cms?.searchPlaceholder ?? "Try '3BHK under 80 lakhs near tech park'";
+  const chips =
+    cms?.popularSearches && cms.popularSearches.length > 0
+      ? cms.popularSearches
+      : [...POPULAR_SEARCHES];
 
   function goSearch(q: string) {
     const trimmed = q.trim();
@@ -22,6 +35,16 @@ export function HomeHero() {
     goSearch(query);
   }
 
+  const headlineNodes = highlight && headline.includes(highlight) ? (
+    <>
+      {headline.slice(0, headline.indexOf(highlight))}
+      <span className="text-primary">{highlight}</span>
+      {headline.slice(headline.indexOf(highlight) + highlight.length)}
+    </>
+  ) : (
+    headline
+  );
+
   return (
     <section className="relative flex min-h-[600px] flex-col items-center justify-center overflow-hidden px-margin-mobile py-xl text-center">
       <div className="relative z-10 w-full max-w-4xl">
@@ -29,13 +52,11 @@ export function HomeHero() {
           <span className="material-symbols-outlined text-[18px]" aria-hidden>
             auto_awesome
           </span>
-          <span className="font-label-sm uppercase tracking-wider">AI-Powered Search Engine</span>
+          <span className="font-label-sm uppercase tracking-wider">{eyebrow}</span>
         </div>
-        <h1 className="font-display-lg mb-md text-display-lg text-on-surface">
-          Find your next home with <span className="text-primary">Intelligence</span>.
-        </h1>
+        <h1 className="font-display-lg mb-md text-display-lg text-on-surface">{headlineNodes}</h1>
         <p className="font-body-lg mx-auto mb-xl max-w-2xl text-body-lg text-on-surface-variant">
-          Skip the filters. Just tell our AI exactly what you&apos;re looking for in plain English.
+          {subheadline}
         </p>
         <form
           onSubmit={onSubmit}
@@ -43,12 +64,12 @@ export function HomeHero() {
         >
           <div className="pl-md text-ai-accent">
             <span className="material-symbols-outlined" aria-hidden>
-              psychology
+              location_on
             </span>
           </div>
           <input
             className="flex-grow border-none bg-transparent px-md py-lg text-body-lg placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-0"
-            placeholder="Try '3BHK under 80 lakhs near tech park'"
+            placeholder={placeholder}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -75,7 +96,7 @@ export function HomeHero() {
         </form>
         <div className="mt-lg flex flex-wrap justify-center gap-sm">
           <span className="font-label-sm text-on-surface-variant">Popular searches:</span>
-          {POPULAR_SEARCHES.map((chip) => (
+          {chips.map((chip) => (
             <button
               key={chip}
               type="button"

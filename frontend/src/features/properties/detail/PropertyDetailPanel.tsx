@@ -14,6 +14,7 @@ import {
 } from "@/lib/api";
 import { Skeleton } from "@/components/states/Skeleton";
 import { ErrorState } from "@/components/states/ErrorState";
+import { AffordabilityCalculator } from "@/features/ai";
 import { DetailCtas } from "./Ctas";
 
 const MapSection = dynamic(
@@ -422,6 +423,8 @@ export function PropertyDetailPanel({ propertyId }: { propertyId: string }) {
                 </div>
               ) : null}
             </section>
+
+            <AffordabilityCalculator propertyPrice={Number(property.price)} />
           </div>
 
           <aside className="space-y-lg lg:col-span-4">

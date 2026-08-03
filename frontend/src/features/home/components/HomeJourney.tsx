@@ -1,4 +1,5 @@
 import { JOURNEY_STEPS } from "../content";
+import type { HomepageJourneyStep } from "@/features/cms";
 
 const toneClass = {
   primary: "bg-primary/10 text-primary",
@@ -6,7 +7,17 @@ const toneClass = {
   secondary: "bg-secondary/10 text-secondary",
 } as const;
 
-export function HomeJourney() {
+export function HomeJourney({ steps }: { steps?: HomepageJourneyStep[] }) {
+  const list =
+    steps && steps.length > 0
+      ? steps.map((s) => ({
+          icon: s.icon,
+          title: s.title,
+          body: s.body,
+          tone: (s.tone ?? "primary") as keyof typeof toneClass,
+        }))
+      : [...JOURNEY_STEPS];
+
   return (
     <section className="bg-surface-container py-xl">
       <div className="mx-auto max-w-container-max px-xl text-center">
@@ -14,7 +25,7 @@ export function HomeJourney() {
           Your journey to a better home
         </h2>
         <div className="grid grid-cols-1 gap-xl md:grid-cols-3">
-          {JOURNEY_STEPS.map((step) => (
+          {list.map((step) => (
             <div key={step.title} className="flex flex-col items-center">
               <div
                 className={`mb-lg flex h-20 w-20 items-center justify-center rounded-full ${toneClass[step.tone]}`}

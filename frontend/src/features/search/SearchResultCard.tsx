@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
-import { getAccessToken, getCurrentUser } from "@/lib/auth";
 import { searchThumbSrc, type AiSearchResultItem } from "@/lib/api";
+import { useFavoriteToggle } from "@/features/favorites";
 
 function formatPrice(amount: string, currency: string) {
   const n = Number(amount);
@@ -30,20 +29,18 @@ export function SearchResultCard({
   /** Hide match % / reasons in filter-fallback mode (SCR-SEARCH-FB). */
   showMatch?: boolean;
 }) {
-  const router = useRouter();
   const thumb = searchThumbSrc(item.thumbnailUrl);
   const reasons = showMatch ? (item.matchReasons?.slice(0, 3) ?? []) : [];
   const score = showMatch ? item.matchScorePercent : null;
+  const { favorited, busy, toggle } = useFavoriteToggle(
+    item.propertyId,
+    `/properties/${item.propertyId}`,
+  );
 
   function onFavorite(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!getAccessToken() && !getCurrentUser()) {
-      router.push(`/login?next=${encodeURIComponent(`/properties/${item.propertyId}`)}`);
-      return;
-    }
-    // Favorites API lands in FEAT-06-01
-    window.alert("Favorites will be available soon.");
+    void toggle();
   }
 
   if (view === "list") {
@@ -89,11 +86,19 @@ export function SearchResultCard({
             </div>
             <button
               type="button"
-              aria-label="Save favorite"
+              aria-label={favorited ? "Remove favorite" : "Save favorite"}
+              aria-pressed={favorited}
+              disabled={busy}
               onClick={onFavorite}
-              className="rounded-full bg-surface-container-low p-2 text-on-surface-variant transition-colors hover:text-error"
+              className={`rounded-full bg-surface-container-low p-2 transition-colors hover:text-error ${
+                favorited ? "text-error" : "text-on-surface-variant"
+              }`}
             >
-              <span className="material-symbols-outlined" aria-hidden>
+              <span
+                className="material-symbols-outlined"
+                style={favorited ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                aria-hidden
+              >
                 favorite
               </span>
             </button>
@@ -164,11 +169,19 @@ export function SearchResultCard({
         <div className="absolute right-md top-md">
           <button
             type="button"
-            aria-label="Save favorite"
+            aria-label={favorited ? "Remove favorite" : "Save favorite"}
+            aria-pressed={favorited}
+            disabled={busy}
             onClick={onFavorite}
-            className="rounded-full bg-surface-container-lowest/80 p-2 text-on-surface-variant shadow-sm backdrop-blur-sm transition-colors hover:text-error"
+            className={`rounded-full bg-surface-container-lowest/80 p-2 shadow-sm backdrop-blur-sm transition-colors hover:text-error ${
+              favorited ? "text-error" : "text-on-surface-variant"
+            }`}
           >
-            <span className="material-symbols-outlined" aria-hidden>
+            <span
+              className="material-symbols-outlined"
+              style={favorited ? { fontVariationSettings: "'FILL' 1" } : undefined}
+              aria-hidden
+            >
               favorite
             </span>
           </button>

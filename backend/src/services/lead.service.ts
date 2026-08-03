@@ -3,6 +3,7 @@ import type { AuthUser } from "../middleware/requireAuth.middleware.js";
 import { leadRepository, toPublicLead } from "../repositories/lead.repository.js";
 import { propertyRepository } from "../repositories/property.repository.js";
 import type { LeadCreateInput, ListLeadsQuery } from "../validators/lead.validators.js";
+import { notificationService } from "./notification.service.js";
 
 export const leadService = {
   async create(input: LeadCreateInput, actor?: AuthUser, idempotencyKey?: string) {
@@ -40,6 +41,19 @@ export const leadService = {
       customerUserId: customerUserId ?? null,
       idempotencyKey: idempotencyKey ?? null,
     });
+
+    try {
+      await notificationService.notifyNewLead({
+        id: lead.id,
+        name: lead.name,
+        email: lead.email,
+        source: lead.source,
+        propertyId: lead.propertyId,
+        assigneeAgentId: lead.assigneeAgentId,
+      });
+    } catch {
+      /* lead create must succeed even if notify fails */
+    }
 
     return { lead: toPublicLead(lead), replayed: false };
   },

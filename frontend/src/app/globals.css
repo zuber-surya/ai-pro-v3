@@ -80,6 +80,22 @@
   --spacing-margin-mobile: var(--pv-space-margin-mobile);
   --spacing-container-max: var(--pv-space-container-max);
 
+  /* Explicit max-widths so max-w-* is not resolved from spacing (lg=24px). */
+  --max-width-xs: 20rem;
+  --max-width-sm: 24rem;
+  --max-width-md: 28rem;
+  --max-width-lg: 32rem;
+  --max-width-xl: 36rem;
+  --max-width-2xl: 42rem;
+  --max-width-3xl: 48rem;
+  --max-width-4xl: 56rem;
+  --max-width-5xl: 64rem;
+  --max-width-6xl: 72rem;
+  --max-width-7xl: 80rem;
+  --max-width-none: none;
+  --max-width-full: 100%;
+  --max-width-container-max: var(--pv-space-container-max);
+
   --text-body-sm: 14px;
   --text-body-sm--line-height: 20px;
   --text-body-md: 16px;

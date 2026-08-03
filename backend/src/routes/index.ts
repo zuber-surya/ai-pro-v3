@@ -1,9 +1,15 @@
 import { Router } from "express";
 import { agentsRouter } from "./agents.routes.js";
 import { authRouter } from "./auth.routes.js";
+import { cmsRouter, publicPagesRouter } from "./cms.routes.js";
+import { customerRouter } from "./customer.routes.js";
+import { favoritesRouter } from "./favorites.routes.js";
 import { healthRouter } from "./health.routes.js";
 import { leadsRouter } from "./leads.routes.js";
+import { notificationRulesRouter } from "./notificationRules.routes.js";
+import { notificationsRouter } from "./notifications.routes.js";
 import { propertiesRouter } from "./properties.routes.js";
+import { aiConfigRouter } from "./aiConfig.routes.js";
 import { aiSearchRouter, searchRouter } from "./search.routes.js";
 import { usersRouter } from "./users.routes.js";
 
@@ -15,5 +21,12 @@ apiRouter.use("/users", usersRouter);
 apiRouter.use("/agents", agentsRouter);
 apiRouter.use("/properties", propertiesRouter);
 apiRouter.use("/leads", leadsRouter);
+apiRouter.use("/favorites", favoritesRouter);
+apiRouter.use("/customer", customerRouter);
+apiRouter.use("/notifications", notificationsRouter);
+apiRouter.use("/notification-rules", notificationRulesRouter);
+apiRouter.use("/cms", cmsRouter);
+apiRouter.use("/pages", publicPagesRouter);
 apiRouter.use("/search", searchRouter);
 apiRouter.use("/ai", aiSearchRouter);
+apiRouter.use("/ai", aiConfigRouter);
