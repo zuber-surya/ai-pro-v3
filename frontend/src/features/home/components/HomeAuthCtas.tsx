@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { NotificationsBell } from "@/features/notifications";
-import { getAccessToken, getCurrentUser } from "@/lib/auth";
+import { getAccessToken, getCurrentUser, homePathForRole, peekAccessRole } from "@/lib/auth";
 
 /** Homepage auth CTAs — Sign In / Join AI Pro, or bell when authed */
 export function HomeAuthCtas() {
   const authed = Boolean(getAccessToken() || getCurrentUser());
   if (authed) {
+    const accountHref = homePathForRole(getCurrentUser()?.role ?? peekAccessRole());
     return (
       <div className="flex items-center gap-md">
         <NotificationsBell />
-        <Link href="/customer" className="font-label-md text-primary hover:underline">
+        <Link href={accountHref} className="font-label-md text-primary hover:underline">
           Account
         </Link>
       </div>

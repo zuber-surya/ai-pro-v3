@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NotificationsBell } from "@/features/notifications";
-import { getAccessToken, getCurrentUser } from "@/lib/auth";
+import { getAccessToken, getCurrentUser, homePathForRole, peekAccessRole } from "@/lib/auth";
 
 /** Shared chrome for public routes except homepage (SCR-HOME has its own). */
 export function PublicChrome({ children }: { children: React.ReactNode }) {
@@ -13,6 +13,7 @@ export function PublicChrome({ children }: { children: React.ReactNode }) {
   }
 
   const authed = Boolean(getAccessToken() || getCurrentUser());
+  const accountHref = homePathForRole(getCurrentUser()?.role ?? peekAccessRole());
 
   return (
     <div className="min-h-screen bg-background pb-24 text-on-surface lg:pb-0">
@@ -39,7 +40,7 @@ export function PublicChrome({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-md">
               <NotificationsBell />
               <Link
-                href="/customer"
+                href={accountHref}
                 className="rounded-lg bg-primary px-md py-xs font-label-md text-on-primary hover:opacity-90"
               >
                 Account

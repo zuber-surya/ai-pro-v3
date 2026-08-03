@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button, Input } from "@/components/ui";
 import { getMe, login } from "@/lib/api";
-import { setAuthTokens, setCurrentUser } from "@/lib/auth";
+import { homePathForRole, setAuthTokens, setCurrentUser } from "@/lib/auth";
 import { AppError } from "@/types/api";
 
 export function LoginForm() {
@@ -34,8 +34,9 @@ export function LoginForm() {
     try {
       const tokens = await login({ email: email.trim(), password });
       setAuthTokens({ access: tokens.accessToken, refresh: tokens.refreshToken });
-      setCurrentUser(await getMe());
-      router.push("/customer");
+      const me = await getMe();
+      setCurrentUser(me);
+      router.push(homePathForRole(me.role));
     } catch (err) {
       if (err instanceof AppError) {
         setFormError(

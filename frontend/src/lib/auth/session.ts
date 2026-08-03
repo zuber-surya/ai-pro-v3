@@ -77,6 +77,12 @@ export function peekAccessRole(): UserRole | null {
   }
 }
 
+/** Post-login / Account home by role. */
+export function homePathForRole(role: UserRole | null | undefined): string {
+  if (role === "admin" || role === "super_admin" || role === "agent") return "/admin";
+  return "/customer";
+}
+
 /**
  * Refresh once (deduped). Returns new access token or null.
  */
