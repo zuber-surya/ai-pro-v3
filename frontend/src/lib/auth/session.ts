@@ -83,6 +83,21 @@ export function homePathForRole(role: UserRole | null | undefined): string {
   return "/customer";
 }
 
+/** Same-origin relative path only (blocks protocol-relative / open redirects). */
+export function safeNextPath(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const path = raw.trim();
+  if (!path.startsWith("/") || path.startsWith("//")) return null;
+  return path;
+}
+
+/** Append safe next query to /login or /register. */
+export function authPathWithNext(base: "/login" | "/register", next: string | null | undefined): string {
+  const safe = safeNextPath(next);
+  if (!safe) return base;
+  return `${base}?next=${encodeURIComponent(safe)}`;
+}
+
 /**
  * Refresh once (deduped). Returns new access token or null.
  */

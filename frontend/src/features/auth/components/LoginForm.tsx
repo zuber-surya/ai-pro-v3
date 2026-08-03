@@ -1,15 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button, Input } from "@/components/ui";
 import { getMe, login } from "@/lib/api";
-import { homePathForRole, setAuthTokens, setCurrentUser } from "@/lib/auth";
+import {
+  authPathWithNext,
+  homePathForRole,
+  safeNextPath,
+  setAuthTokens,
+  setCurrentUser,
+} from "@/lib/auth";
 import { AppError } from "@/types/api";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextRaw = searchParams.get("next");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
@@ -36,7 +44,8 @@ export function LoginForm() {
       setAuthTokens({ access: tokens.accessToken, refresh: tokens.refreshToken });
       const me = await getMe();
       setCurrentUser(me);
-      router.push(homePathForRole(me.role));
+      const next = safeNextPath(nextRaw);
+      router.push(next ?? homePathForRole(me.role));
     } catch (err) {
       if (err instanceof AppError) {
         setFormError(
@@ -82,7 +91,10 @@ export function LoginForm() {
       </Button>
       <p className="text-body-sm text-on-surface-variant">
         New here?{" "}
-        <Link href="/register" className="text-primary hover:underline">
+        <Link
+          href={authPathWithNext("/register", nextRaw)}
+          className="text-primary hover:underline"
+        >
           Create an account
         </Link>
       </p>

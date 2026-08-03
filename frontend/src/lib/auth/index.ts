@@ -10,6 +10,8 @@ export {
   refreshAccessTokenStub,
   peekAccessRole,
   homePathForRole,
+  safeNextPath,
+  authPathWithNext,
 } from "./session";
 export { ApiAuthBootstrap } from "./ApiAuthBootstrap";
 export { RequireAuth, RequireRole } from "./RequireAuth";

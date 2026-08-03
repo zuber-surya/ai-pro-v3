@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { RegisterForm } from "@/features/auth";
 
 export default function RegisterPage() {
@@ -10,7 +11,9 @@ export default function RegisterPage() {
           Register as a customer to save favorites and inquire on listings.
         </p>
       </header>
-      <RegisterForm />
+      <Suspense fallback={<p className="text-center text-body-md text-on-surface-variant">Loading…</p>}>
+        <RegisterForm />
+      </Suspense>
     </main>
   );
 }

@@ -59,3 +59,11 @@ Gemini only. Email + in-app notifications only. Five roles. No Kanban / SMS / Wh
 ## AI assistants
 
 See `CLAUDE.md` and `docs/13_AI_DEVELOPMENT_RULES.md`.
+
+## Local QA
+
+- Frontend `http://localhost:3001` · API `http://localhost:4001/api/v1`
+- Create a customer: `POST /api/v1/auth/register` (`email`, `password`, `fullName`)
+- Create/reset admin: `node backend/scripts/upsert-cmd-admin.mjs` (local only; do not commit passwords)
+- Pixel checklist: `docs/16_UI_PIXEL_PERFECT_CHECKLIST.md`
+- Design references: `docs/design_reference/**`

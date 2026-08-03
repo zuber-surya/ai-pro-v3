@@ -1,15 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button, Input } from "@/components/ui";
 import { getMe, register } from "@/lib/api";
-import { setAuthTokens, setCurrentUser } from "@/lib/auth";
+import {
+  authPathWithNext,
+  homePathForRole,
+  safeNextPath,
+  setAuthTokens,
+  setCurrentUser,
+} from "@/lib/auth";
 import { AppError } from "@/types/api";
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextRaw = searchParams.get("next");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,8 +52,10 @@ export function RegisterForm() {
         fullName: fullName.trim(),
       });
       setAuthTokens({ access: tokens.accessToken, refresh: tokens.refreshToken });
-      setCurrentUser(await getMe());
-      router.push("/customer");
+      const me = await getMe();
+      setCurrentUser(me);
+      const next = safeNextPath(nextRaw);
+      router.push(next ?? homePathForRole(me.role));
     } catch (err) {
       if (err instanceof AppError) {
         if (err.code === "CONFLICT_DUPLICATE_EMAIL") {
@@ -99,7 +109,7 @@ export function RegisterForm() {
       </Button>
       <p className="text-body-sm text-on-surface-variant">
         Already have an account?{" "}
-        <Link href="/login" className="text-primary hover:underline">
+        <Link href={authPathWithNext("/login", nextRaw)} className="text-primary hover:underline">
           Sign In
         </Link>
       </p>

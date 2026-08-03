@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { LoginForm } from "@/features/auth";
 
 export default function LoginPage() {
@@ -10,7 +11,9 @@ export default function LoginPage() {
           Access your account with email and password.
         </p>
       </header>
-      <LoginForm />
+      <Suspense fallback={<p className="text-center text-body-md text-on-surface-variant">Loading…</p>}>
+        <LoginForm />
+      </Suspense>
     </main>
   );
 }

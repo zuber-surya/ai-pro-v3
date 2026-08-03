@@ -14,9 +14,12 @@ export function PublicChrome({ children }: { children: React.ReactNode }) {
 
   const authed = Boolean(getAccessToken() || getCurrentUser());
   const accountHref = homePathForRole(getCurrentUser()?.role ?? peekAccessRole());
+  const propertyDetailPad = /^\/properties\/[^/]+$/.test(pathname ?? "");
 
   return (
-    <div className="min-h-screen bg-background pb-24 text-on-surface lg:pb-0">
+    <div
+      className={`min-h-screen bg-background text-on-surface ${propertyDetailPad ? "pb-24 lg:pb-0" : ""}`}
+    >
       <header className="sticky top-0 z-50 w-full bg-surface shadow-sm">
         <div className="mx-auto flex max-w-container-max items-center justify-between px-lg py-md">
           <Link href="/" className="font-headline-md text-headline-md font-bold text-primary">

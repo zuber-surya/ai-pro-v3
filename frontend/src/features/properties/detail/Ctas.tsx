@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AppError, createLead } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { useFavoriteToggle } from "@/features/favorites";
@@ -47,6 +47,12 @@ export function DetailCtas({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!success || mode != null || authScheduleOpen) return;
+    const t = window.setTimeout(() => setSuccess(null), 4000);
+    return () => window.clearTimeout(t);
+  }, [success, mode, authScheduleOpen]);
 
   const title = useMemo(() => {
     if (mode === "callback") return "Request Callback";
@@ -163,10 +169,18 @@ export function DetailCtas({
     <>
       {success && !mode && !authScheduleOpen ? (
         <div
-          className="fixed bottom-24 left-1/2 z-40 w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl border border-outline-variant bg-white px-md py-sm text-center font-body-sm text-on-surface shadow-level-2 lg:bottom-8"
+          className="pointer-events-auto fixed bottom-24 left-1/2 z-40 flex w-[min(92vw,28rem)] -translate-x-1/2 items-center justify-between gap-md rounded-xl border border-outline-variant bg-white px-md py-sm font-body-sm text-on-surface shadow-level-2 lg:bottom-8"
           role="status"
         >
-          {success}
+          <span className="flex-1 text-center">{success}</span>
+          <button
+            type="button"
+            className="shrink-0 rounded-lg px-sm py-xs font-label-md text-on-surface-variant hover:text-on-surface"
+            aria-label="Dismiss"
+            onClick={() => setSuccess(null)}
+          >
+            Close
+          </button>
         </div>
       ) : null}
 
