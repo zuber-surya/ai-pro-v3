@@ -3,10 +3,11 @@
 | Field | Value |
 |-------|--------|
 | **Document** | UI Implementation Guide (Developer Checklist) |
-| **Version** | 1.0.0 |
-| **Date** | 2026-07-30 |
+| **Version** | 1.0.1 |
+| **Date** | 2026-08-04 |
 | **UI SOT** | `docs/design_reference/**` (HTML always wins) |
 | **Related** | Constitution, PRD, SRS, OpenAPI, Architecture |
+| **Status sync** | Routes + Done column aligned to live app (see §3.1) |
 
 ## 1. Purpose
 
@@ -24,42 +25,46 @@ This guide is the **mandatory implementation checklist** for every screen in `de
 
 ## 3. Screen Inventory (Complete — none skipped)
 
-| # | ID | Directory | HTML | Screenshot | MVP |
-|---|----|-----------|------|------------|-----|
-| 1 | SCR-HOME | propvista_crm_homepage | yes | screen.png | Yes |
-| 2 | SCR-SEARCH-STD | search_results_standard_view | yes | screen.png | Yes |
-| 3 | SCR-SEARCH-FB | search_results_filter_fallback_view | yes | screen.png | Yes |
-| 4 | SCR-SEARCH-EMPTY | search_results_empty_state | yes | screen.png | Yes |
-| 5 | SCR-PROP-D | property_details_premium_view | yes | screen.png | Yes |
-| 6 | SCR-CUS-DASH | customer_account_dashboard | yes | screen.png | Yes |
-| 7 | SCR-LEAD-KANBAN | lead_pipeline_kanban_view | yes | screen.png | **No** |
-| 8 | SCR-LEAD-D | lead_detail_sarah_jenkins | yes | screen.png | Yes* |
-| 9 | SCR-PROP-EDIT | listing_editor_basic_info | yes | screen.png | Yes |
-| 10 | SCR-PROP-INV | property_inventory_admin_view | yes | screen.png | Yes |
-| 11 | SCR-BULK | bulk_upload_validation_results | yes | screen.png | Yes |
-| 12 | SCR-AI-CFG | ai_chatbot_configuration | yes | screen.png | Yes |
-| 13 | SCR-CMD | admin_agent_command_center | yes | screen.png | Yes |
-| 14 | SCR-SHELL-TOKENS | propvista_crm | DESIGN.md | n/a | Yes |
-| 15 | AST-SEARCH-ICON | a_clean_modern_minimal_flat_line_illustration... | n/a | screen.png | Yes |
+| # | ID | Directory | HTML | Screenshot | MVP | Impl |
+|---|----|-----------|------|------------|-----|------|
+| 1 | SCR-HOME | propvista_crm_homepage | yes | screen.png | Yes | **Done** |
+| 2 | SCR-SEARCH-STD | search_results_standard_view | yes | screen.png | Yes | **Done** |
+| 3 | SCR-SEARCH-FB | search_results_filter_fallback_view | yes | screen.png | Yes | **Done** |
+| 4 | SCR-SEARCH-EMPTY | search_results_empty_state | yes | screen.png | Yes | **Done** |
+| 5 | SCR-PROP-D | property_details_premium_view | yes | screen.png | Yes | **Done** |
+| 6 | SCR-CUS-DASH | customer_account_dashboard | yes | screen.png | Yes | **Done** |
+| 7 | SCR-LEAD-KANBAN | lead_pipeline_kanban_view | yes | screen.png | **No** | Out of MVP |
+| 8 | SCR-LEAD-D | lead_detail_sarah_jenkins | yes | screen.png | Yes* | **Done** |
+| 9 | SCR-PROP-EDIT | listing_editor_basic_info | yes | screen.png | Yes | **Done** |
+| 10 | SCR-PROP-INV | property_inventory_admin_view | yes | screen.png | Yes | **Done** |
+| 11 | SCR-BULK | bulk_upload_validation_results | yes | screen.png | Yes | **Done** |
+| 12 | SCR-AI-CFG | ai_chatbot_configuration | yes | screen.png | Yes | **Done** |
+| 13 | SCR-CMD | admin_agent_command_center | yes | screen.png | Yes | **Done** |
+| 14 | SCR-SHELL-TOKENS | propvista_crm | DESIGN.md | n/a | Yes | **Done** |
+| 15 | AST-SEARCH-ICON | a_clean_modern_minimal_flat_line_illustration... | n/a | screen.png | Yes | **Done** |
 
 \* MVP without excluded timeline/reminder product backends.
 
-## 4. Suggested App Routes
+### 3.1 Implementation status (2026-08-04)
+
+All MVP design_reference screens are shipped. Catalog: `docs/design_reference/design-references-catalog.md`. Pixel log: `16_UI_PIXEL_PERFECT_CHECKLIST.md` §39. Residual: full tablet/mobile re-audit per screen (low).
+
+## 4. App Routes (live)
 
 | Screen | Next.js App Router route |
 |--------|--------------------------|
 | SCR-HOME | `/` |
-| SCR-SEARCH-* | `/search` (query + `mode`/`status` drives STD/FB/EMPTY) |
+| SCR-SEARCH-* | `/search` (query + `mode` drives STD/FB/EMPTY) |
 | SCR-PROP-D | `/properties/[id]` |
-| SCR-LOGIN | `/login` (functional only — no design_reference HTML) |
-| SCR-REGISTER | `/register` (functional only — no design_reference HTML) |
+| SCR-LOGIN | `/login` (functional only — no design_reference HTML; supports `?next=`) |
+| SCR-REGISTER | `/register` (functional only; supports `?next=`) |
 | SCR-CUS-DASH | `/customer` |
-| SCR-CLIENTS | `/admin/leads` (lead list; functional / ClientsView — no design_reference HTML) |
-| SCR-LEAD-KANBAN | `/admin/leads/pipeline` (Future only) |
+| SCR-CLIENTS | `/admin/leads` (lead list; not Kanban) |
+| SCR-LEAD-KANBAN | Future only — **do not ship** in MVP nav |
 | SCR-LEAD-D | `/admin/leads/[id]` |
-| SCR-PROP-EDIT | `/admin/properties/new`, `/admin/properties/[id]/edit` |
-| SCR-PROP-INV | `/admin/properties` |
-| SCR-BULK | `/admin/properties/bulk` |
+| SCR-PROP-EDIT | `/properties/[id]/edit` |
+| SCR-PROP-INV | `/properties` |
+| SCR-BULK | `/properties/bulk` |
 | SCR-AI-CFG | `/admin/ai-config` |
 | SCR-CMD | `/admin` |
 | SCR-USERS | `/admin/users` (functional only) |
@@ -67,6 +72,7 @@ This guide is the **mandatory implementation checklist** for every screen in `de
 | SCR-CMS | `/admin/cms` (functional only) |
 | SCR-NTF-RULES | `/admin/notification-rules` (functional only) |
 | SCR-REPORTS | `/admin/reports` (functional only) |
+| Public CMS page | `/pages/[slug]` (functional only) |
 
 ---
 
@@ -988,7 +994,7 @@ Preserve HTML structure; reminders/timeline backends excluded from MVP.
 |-------|--------|
 | **Screen Name** | Listing Editor — Basic Info |
 | **Screen ID** | SCR-PROP-EDIT |
-| **Route** | `/admin/properties/[id]/edit` |
+| **Route** | `/properties/[id]/edit` |
 | **HTML Reference** | `docs/design_reference/listing_editor_basic_info/code.html` |
 | **Screenshot Reference** | `docs/design_reference/listing_editor_basic_info/screen.png` |
 | **MVP** | Yes |
@@ -1099,7 +1105,7 @@ Exclude virtual tour/video fields from MVP publish path.
 |-------|--------|
 | **Screen Name** | Property Inventory — Admin View |
 | **Screen ID** | SCR-PROP-INV |
-| **Route** | `/admin/properties` |
+| **Route** | `/properties` |
 | **HTML Reference** | `docs/design_reference/property_inventory_admin_view/code.html` |
 | **Screenshot Reference** | `docs/design_reference/property_inventory_admin_view/screen.png` |
 | **MVP** | Yes |
@@ -1119,7 +1125,7 @@ Exclude virtual tour/video fields from MVP publish path.
 - `GET /properties` (auth inventory)
 - `POST /properties/bulk/status`
 - `DELETE/PATCH` property
-- Navigate bulk → `/admin/properties/bulk`
+- Navigate bulk → `/properties/bulk`
 - Export `GET /properties/export` if button present
 
 ### State
@@ -1207,7 +1213,7 @@ Wire Bulk Upload button to SCR-BULK flow.
 |-------|--------|
 | **Screen Name** | Bulk Property Upload — Validation Results |
 | **Screen ID** | SCR-BULK |
-| **Route** | `/admin/properties/bulk` |
+| **Route** | `/properties/bulk` |
 | **HTML Reference** | `docs/design_reference/bulk_upload_validation_results/code.html` |
 | **Screenshot Reference** | `docs/design_reference/bulk_upload_validation_results/screen.png` |
 | **MVP** | Yes |

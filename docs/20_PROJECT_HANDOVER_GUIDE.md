@@ -841,11 +841,14 @@ Update this table during handover day; keep a private copy if this repo is publi
 | SCR-PROP-D | `/properties/[id]` |
 | SCR-CUS-DASH | `/customer` |
 | SCR-LEAD-D | `/admin/leads/[id]` |
-| SCR-PROP-INV | `/admin/properties` |
-| SCR-PROP-EDIT | `/admin/properties/new` or `[id]/edit` |
-| SCR-BULK | `/admin/properties/bulk` |
+| SCR-PROP-INV | `/properties` |
+| SCR-PROP-EDIT | `/properties/[id]/edit` |
+| SCR-BULK | `/properties/bulk` |
 | SCR-AI-CFG | `/admin/ai-config` |
 | SCR-CMD | `/admin` |
+| SCR-CLIENTS | `/admin/leads` |
+| SCR-REPORTS | `/admin/reports` |
+| Full matrix | `docs/design_reference/design-references-catalog.md` |
 
 ### D. First-week onboarding plan
 

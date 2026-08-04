@@ -42,8 +42,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
-      <aside className="fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-outline-variant bg-surface-container-lowest px-md py-xl">
-        <div className="mb-xl px-sm">
+      <aside className="fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-outline-variant bg-surface-container-lowest px-md py-lg">
+        <div className="mb-md px-sm">
           <h1 className="font-headline-md text-headline-md font-bold text-primary">
             PropVista CRM
           </h1>
@@ -52,16 +52,19 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </p>
         </div>
 
-        <nav className="flex-1 space-y-xs overflow-y-auto px-xs" aria-label="Admin">
+        <nav
+          className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-xs"
+          aria-label="Admin"
+        >
           {NAV.map((item) => {
             const active = navActive(pathname, item.href, "exact" in item && item.exact);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-md rounded-lg px-lg py-sm font-label-md text-label-md transition-colors ${
+                className={`flex items-center gap-md rounded-lg px-md py-1.5 font-label-md text-label-md transition-all duration-150 ease-in-out ${
                   active
-                    ? "bg-primary text-on-primary"
+                    ? "scale-95 bg-primary-container text-on-primary-container"
                     : "text-on-surface-variant hover:bg-surface-container-high"
                 }`}
               >
@@ -79,10 +82,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="mt-auto space-y-sm border-t border-outline-variant px-md pt-lg">
+        <div className="mt-auto shrink-0 space-y-sm border-t border-outline-variant px-sm pt-md">
           <Link
             href="/properties"
-            className="flex w-full items-center justify-center gap-xs rounded-xl bg-primary px-lg py-md font-label-md text-label-md text-on-primary shadow-sm transition-all hover:opacity-90"
+            className="flex w-full items-center justify-center gap-xs rounded-xl bg-primary px-lg py-sm font-label-md text-label-md text-on-primary shadow-sm transition-all hover:opacity-90"
           >
             <span className="material-symbols-outlined" aria-hidden>
               add

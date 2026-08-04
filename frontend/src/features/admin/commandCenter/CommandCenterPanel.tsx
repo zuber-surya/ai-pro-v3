@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   getMetricsDashboard,
@@ -87,59 +87,112 @@ function KpiCard({
 
 function VerticalBarChart({ items }: { items: Array<{ label: string; count: number }> }) {
   const max = Math.max(1, ...items.map((i) => i.count));
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => setReady(true));
+    return () => window.cancelAnimationFrame(id);
+  }, [items]);
+
   if (!items.length) {
     return <p className="text-body-sm text-on-surface-variant">No leads in this range.</p>;
   }
   return (
-    <div className="flex h-48 items-end justify-between gap-md">
-      {items.slice(0, 6).map((item) => (
-        <div key={item.label} className="flex w-full flex-col items-center gap-sm">
-          <div
-            className="w-full rounded-t-lg bg-primary-container/30 transition-all hover:bg-primary-container/50"
-            style={{ height: `${Math.max(8, Math.round((item.count / max) * 100))}%` }}
-            title={`${item.label}: ${item.count}`}
-          />
-          <span className="max-w-full truncate text-center text-[10px] font-label-sm text-on-surface-variant">
-            {item.label}
-          </span>
-        </div>
-      ))}
+    <div className="flex h-48 flex-1 items-end justify-between gap-md">
+      {items.slice(0, 6).map((item, index) => {
+        const pct = Math.max(12, Math.round((item.count / max) * 100));
+        const secondary = index % 3 === 2;
+        return (
+          <div key={item.label} className="flex h-full w-full flex-col items-center justify-end gap-sm">
+            <span className="font-label-sm text-[10px] text-on-surface">{item.count}</span>
+            <div
+              className={`chart-bar w-full max-w-[3rem] rounded-t-lg transition-all duration-1000 ease-in-out ${
+                secondary
+                  ? "bg-secondary-container/40 hover:bg-secondary-container/60"
+                  : "bg-primary-container/40 hover:bg-primary-container/60"
+              }`}
+              style={{ height: ready ? `${pct}%` : "0%" }}
+              title={`${item.label}: ${item.count}`}
+            />
+            <span className="max-w-full truncate text-center text-[10px] font-label-sm text-on-surface-variant">
+              {item.label.replace(/_/g, " ")}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
+}
+
+function smoothPath(points: Array<{ x: number; y: number }>) {
+  if (points.length === 0) return "";
+  if (points.length === 1) return `M ${points[0]!.x} ${points[0]!.y}`;
+  let d = `M ${points[0]!.x} ${points[0]!.y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i]!;
+    const p1 = points[i + 1]!;
+    const cx = (p0.x + p1.x) / 2;
+    d += ` C ${cx} ${p0.y}, ${cx} ${p1.y}, ${p1.x} ${p1.y}`;
+  }
+  return d;
 }
 
 function LineChart({ points }: { points: Array<{ date: string; count: number }> }) {
   const max = Math.max(1, ...points.map((p) => p.count));
   const w = 400;
   const h = 150;
+  const gradId = useId().replace(/:/g, "");
   if (!points.length) {
     return <p className="text-body-sm text-on-surface-variant">No views in range.</p>;
   }
-  const coords = points.map((p, i) => {
-    const x = (i / Math.max(points.length - 1, 1)) * w;
-    const y = h - 10 - (p.count / max) * (h - 20);
-    return `${x},${y}`;
-  });
-  const line = coords.join(" ");
-  const area = `0,${h} ${line} ${w},${h}`;
-  const mid = Math.floor(points.length / 2);
+  const plotted = points.map((p, i) => ({
+    x: (i / Math.max(points.length - 1, 1)) * w,
+    y: h - 16 - (p.count / max) * (h - 28),
+    date: p.date,
+    count: p.count,
+  }));
+  const line = smoothPath(plotted);
+  const area = `${line} L ${w},${h} L 0,${h} Z`;
+  const ticks = [
+    plotted[0],
+    plotted[Math.floor(plotted.length / 3)],
+    plotted[Math.floor((plotted.length * 2) / 3)],
+    plotted[plotted.length - 1],
+  ].filter(Boolean);
   return (
-    <div className="relative h-48">
+    <div className="relative flex h-48 items-center justify-center">
       <svg className="h-full w-full text-primary" viewBox={`0 0 ${w} ${h}`} fill="none">
-        <polyline
-          points={line}
+        <defs>
+          <linearGradient id={gradId} x1="240" x2="240" y1="0" y2="150" gradientUnits="userSpaceOnUse">
+            <stop stopColor="currentColor" />
+            <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill={`url(#${gradId})`} fillOpacity="0.12" />
+        <path
+          d={line}
           stroke="currentColor"
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
           fill="none"
         />
-        <polygon points={area} fill="currentColor" opacity="0.08" />
+        {plotted
+          .filter((_, i) => i === 0 || i === plotted.length - 1 || i % Math.ceil(plotted.length / 4) === 0)
+          .map((p) => (
+            <circle
+              key={`${p.date}-${p.x}`}
+              cx={p.x}
+              cy={p.y}
+              r="3.5"
+              fill="currentColor"
+              className="text-primary"
+            />
+          ))}
       </svg>
       <div className="absolute right-0 bottom-0 left-0 flex justify-between px-xs text-[10px] font-label-sm text-on-surface-variant">
-        <span>{points[0]?.date.slice(5)}</span>
-        <span>{points[mid]?.date.slice(5)}</span>
-        <span>{points[points.length - 1]?.date.slice(5)}</span>
+        {ticks.map((t) => (
+          <span key={`${t!.date}-${t!.x}`}>{t!.date.slice(5)}</span>
+        ))}
       </div>
     </div>
   );

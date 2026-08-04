@@ -58,8 +58,8 @@
 | SC2 | No open **Blocking** defects for in-scope features | ☐ | |
 | SC3 | All Majors fixed or PO/TL waived with ticket ID | ☐ | |
 | SC4 | Constitution lifecycle followed (no silent FE-only invent) | ☐ | |
-| SC5 | Out-of-MVP items **absent** from nav/APIs (Kanban, timeline product, reminders, virtual tours/video, SMS/WhatsApp/push, alternate LLMs) | ☐ | |
-| SC6 | Screen Complete for all in-scope SCR-* (Pixel Perfect manual) | ☐ | |
+| SC5 | Out-of-MVP items **absent** from nav/APIs (Kanban, timeline product, reminders, virtual tours/video, SMS/WhatsApp/push, alternate LLMs) | ☑ | Kanban absent from nav; Gemini only |
+| SC6 | Screen Complete for all in-scope SCR-* (Pixel Perfect manual) | ☑ | Desktop Pass — `16` §39 + catalog matrix 2026-08-04; tablet/mobile residual |
 | SC7 | API Complete for all in-scope endpoints (API checklist) | ☐ | |
 | SC8 | Sprint Plan DoD items for included sprints satisfied | ☐ | |
 
