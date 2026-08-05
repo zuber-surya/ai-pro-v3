@@ -37,7 +37,7 @@
 | **Release name / version** | `v0.1.0-rc` (MVP RC — engineering freeze) |
 | **Release type** | Minor |
 | **Target environment** | Staging first → Production (cutover **blocked** until PO/ops) |
-| **Git commit SHA** | `eefefc4a4b5d756063c980d2b3d971b7a291c29f` |
+| **Git commit SHA** | `183409bcb6b299318f309a0bd606fde55564bb2d` (RC tip; UI ship `eefefc4`) |
 | **Git tag** | `v0.1.0-rc` _(create after PO approves tag)_ |
 | **Release manager** | Engineering (agent session 2026-08-05) |
 | **Tech lead** | _(awaiting)_ |
@@ -481,7 +481,7 @@ Release may proceed only if:
 ```markdown
 # Release Packet — v0.1.0-rc
 
-**SHA:** (see git log after UI ship commit)
+**SHA:** `eefefc4a4b5d756063c980d2b3d971b7a291c29f`
 **Tag:** v0.1.0-rc (pending)
 **Window:** Staging first
 **RM / TL / QA / PO:** Eng prep / pending / pending / pending
