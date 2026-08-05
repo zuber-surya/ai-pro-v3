@@ -98,8 +98,8 @@ const FEATURED_SHOWCASE = [
     city: "Bangalore",
     region: "Karnataka",
     country: "India",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCNqELk8MLCTE3yAP7rrphgOjNPjUDFlPmqhvynyVNd7tiY3dAPoP0yepZ8kDIoaNiXwsekuloXMW5Wm4qyDVfUKFP50jxHoiOj3WGn2f2LFas3Ect-Lv0txziKKjgN-K7-RwHc-Cpo8byUASHUuEX3FUTfM7NpnEk6mePLiV0UUN2BkhOuOWUd2WFFWpaGVtOPLkWUAxGGU50q2PAgLrYLGHrTLrA9T1L_zz_6Q8d5hSke7KnlV2hL7Q",
+    // Served from frontend/public (propertyMediaSrc keeps /assets/* on FE origin)
+    imageUrl: "/assets/stock/property-1.jpg",
   },
   {
     id: "f1000000-0000-4000-8000-000000000002",
@@ -113,8 +113,7 @@ const FEATURED_SHOWCASE = [
     city: "Bangalore",
     region: "Karnataka",
     country: "India",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBQH05Pd5UtkqR88qRyZgD8LUc8VeoUFnpuIdtKTRlE2wRH8mJtPgbJtBXUFGkaIytN8NmTMhW9ggefNx80GM09ee5lR23b0kZCr6FPbr-kCTmrWFg2LZfKWp2b85x_I7HXbXFV2RHJ61dgtRu4y-Ghjl-WGBCVHssO2X2-jq-8a_SMdeQI_IukQKmhMbmIHU_4qFJmYsNS-kpDzWzVfrXGr_9m_aQrAVeFv_y9aqXXXenxYIjYSzvpuA",
+    imageUrl: "/assets/stock/property-2.jpg",
   },
   {
     id: "f1000000-0000-4000-8000-000000000003",
@@ -128,8 +127,7 @@ const FEATURED_SHOWCASE = [
     city: "Bangalore",
     region: "Karnataka",
     country: "India",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDadPEZUHU1ASR3IAeKE-vq5Nh9lNfkfib-dhqClulIVWHcm336XhTmiGSE2wr7msE5dxV8AVZ_s8Elw7RwxpS9nw_LE659iUZ8ZlAloNqiopp0DrfvwvNIWpNUuahOeTPJ2goygav-1XXNhJHDDdI7Xp1BhaHp845bRpK1DocuTSnpkzHl8TRNoomFNiK4nHQJDo6CH3BEcjl19n0OUjjIw6yhms23OCTyRMGylvlpPi8ViVAE7K-FSQ",
+    imageUrl: "/assets/stock/property-3.jpg",
   },
 ] as const;
 

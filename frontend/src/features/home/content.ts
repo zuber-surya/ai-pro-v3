@@ -34,8 +34,7 @@ export const TESTIMONIALS = [
     name: "Aditi Sharma",
     role: "Tech Lead at FinCorp",
     stars: 5,
-    avatar:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAvPLphI9Z3Hab1N0-VdR1S1AVRvIc-fwZ65tTXnqtL5oizRiDGjJ2IeAZUqfhzWn6rPLgUA8nFmIMICgXIjtC-4qZ3Bol_3Kn0GK3C-NIX940rPMV7kQAM9eBpd_02eEILaUMIj14XmjVLXNEPJUyq93M8-HllBhyVpMAUhAdPWvQlpZTVw3jSUEQ0NnX-a-MiPEVCtNCpwrm1tpetTfGnurNU-kYfw18R5RRNs-IYffKu6S4b8GZzQw",
+    avatar: "/assets/stock/avatar-1.jpg",
   },
   {
     quote:
@@ -43,8 +42,7 @@ export const TESTIMONIALS = [
     name: "Rahul Mehta",
     role: "Founder, Urban Spaces",
     stars: 5,
-    avatar:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAflldv_EN-QSWwHejXfRoMZBSyb0xNFHFEWzf1QmsSQSfbZtKFUsltXtzGN7CyKweBcN7YfaZTADqwnkND5vRc5a-RN29FGUMeH31nOTBCBrJytXFgS1ITsE8HYoNamBtc4XQvyAGUDPpoptaHsVLQEqgsqjYB6GyqzkEq6R1dMAT6oYnbinHxsZx-gH1IdrG2sukwutjSwcHI0Di0afiufS0l_iqB8tbumlckElRNti4UezVm9HBHgg",
+    avatar: "/assets/stock/avatar-2.jpg",
   },
   {
     quote:
@@ -52,7 +50,6 @@ export const TESTIMONIALS = [
     name: "Kevin Zhang",
     role: "Design Architect",
     stars: 4,
-    avatar:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDmJVuqD_i-RJldOZhYezVc5n7dXGlvRUid4Cy05KXSMrKpBALAsWlcVK3OmNc-FESAQkwziDggxYrTWP6zEcqRcwNZreNBG0NOgs8Key4154hC6fg8RggbirUnUyJJOfEHgnBCFICz9cmhnvzU_89Qz2SxHKDTyi1zbajjUGcgfkNc5cBVx0vcc3X9eJ_9lOs_HjzEUWFwMWDMX0oTjDdylWKV4kshyhWrT5HecyP9cVVVkNqlFb1LhA",
+    avatar: "/assets/stock/avatar-3.jpg",
   },
 ] as const;

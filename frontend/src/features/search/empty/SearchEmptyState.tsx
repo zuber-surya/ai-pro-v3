@@ -22,15 +22,18 @@ export function SearchEmptyState({
   chips = [...DEFAULT_CHIPS],
 }: SearchEmptyStateProps) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-lg py-xl text-center">
+    <div className="relative flex flex-1 flex-col items-center justify-center px-lg py-xl text-center">
       <div className="flex w-full max-w-xl flex-col items-center">
         <div className="relative mb-lg flex h-48 w-48 items-center justify-center md:h-64 md:w-64">
           <div className="absolute -right-4 -top-4 h-12 w-12 rounded-full bg-secondary-container opacity-20 blur-xl" />
           <div className="absolute -bottom-6 -left-6 h-16 w-16 rounded-full bg-primary-container opacity-10 blur-2xl" />
-          <div className="relative z-10 flex h-full w-full flex-col items-center justify-center rounded-full bg-surface-container-low">
-            <span className="material-symbols-outlined text-6xl text-outline" aria-hidden>
-              search_off
-            </span>
+          <div className="relative z-10 flex h-full w-full flex-col items-center justify-center rounded-full bg-surface-container-low p-lg">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/assets/search-magnifying-glass.svg"
+              alt=""
+              className="h-28 w-28 object-contain md:h-36 md:w-36"
+            />
           </div>
         </div>
 
@@ -79,6 +82,33 @@ export function SearchEmptyState({
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="mt-xl w-full max-w-xs rounded-xl border border-outline-variant border-l-4 border-l-secondary bg-surface-container-lowest/90 p-lg shadow-lg backdrop-blur-sm 2xl:absolute 2xl:bottom-xl 2xl:right-xl 2xl:mt-0">
+        <div className="mb-md flex items-center gap-sm text-secondary">
+          <span
+            className="material-symbols-outlined"
+            style={{ fontVariationSettings: "'FILL' 1" }}
+            aria-hidden
+          >
+            lightbulb
+          </span>
+          <span className="font-label-md uppercase tracking-wider">AI Insight</span>
+        </div>
+        <p className="mb-md text-body-sm leading-tight text-on-surface">
+          Based on your filters, try guided matching for listings just outside your current
+          criteria.
+        </p>
+        <button
+          type="button"
+          onClick={onGuidedMatch}
+          className="group flex items-center gap-xs font-label-sm font-semibold text-secondary"
+        >
+          View suggestions
+          <span className="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-1">
+            arrow_forward
+          </span>
+        </button>
       </div>
     </div>
   );

@@ -8,12 +8,12 @@ import {
   getCustomerProfile,
   listCustomerInquiries,
   listNotifications,
-  propertyMediaSrc,
   type CustomerDashboard,
   type CustomerInquiry,
   type CustomerProfile,
   type NotificationItem,
 } from "@/lib/api";
+import { MediaImage } from "@/components/ui";
 import { ErrorState, Loader } from "@/components/states";
 import { CustomerShell } from "./CustomerShell";
 import { RequirementProfileEditor } from "./RequirementProfileEditor";
@@ -117,26 +117,18 @@ export function CustomerDashboardPanel() {
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
-              {dash.recentProperties.map((p) => {
-                const cover = propertyMediaSrc(p.coverImageUrl);
-                return (
+              {dash.recentProperties.map((p) => (
                   <Link
                     key={p.id}
                     href={`/properties/${p.id}`}
                     className="group relative aspect-[4/3] cursor-pointer overflow-hidden rounded-lg"
                   >
-                    {cover ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={cover}
-                        alt=""
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center bg-surface-container text-on-surface-variant">
-                        <span className="material-symbols-outlined text-3xl">apartment</span>
-                      </div>
-                    )}
+                    <MediaImage
+                      src={p.coverImageUrl}
+                      seed={p.id}
+                      alt={p.title}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-sm">
                       <p className="truncate font-label-sm text-white">{p.title}</p>
                       <p className="font-label-sm text-white/80">
@@ -144,8 +136,7 @@ export function CustomerDashboardPanel() {
                       </p>
                     </div>
                   </Link>
-                );
-              })}
+              ))}
             </div>
           )}
         </section>
@@ -207,7 +198,10 @@ export function CustomerDashboardPanel() {
           )}
         </section>
 
-        <section className="rounded-xl bg-surface-container-lowest p-lg shadow-[0px_2px_4px_rgba(0,0,0,0.05)] md:col-span-5">
+        <section
+          id="notifications"
+          className="rounded-xl bg-surface-container-lowest p-lg shadow-[0px_2px_4px_rgba(0,0,0,0.05)] md:col-span-5"
+        >
           <div className="mb-lg flex items-center justify-between">
             <h3 className="font-headline-md text-headline-md">Notifications</h3>
           </div>

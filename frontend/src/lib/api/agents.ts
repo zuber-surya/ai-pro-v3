@@ -1,5 +1,6 @@
 import { publicEnv } from "@/lib/config/env";
 import { getAccessToken } from "@/lib/auth";
+import { stockAvatar } from "@/lib/media/stock";
 import { AppError, type ApiErrorEnvelope } from "@/types/api";
 import { apiRequest } from "./client";
 
@@ -86,9 +87,17 @@ export async function uploadAgentImage(id: string, file: File): Promise<Agent> {
   return (await res.json()) as Agent;
 }
 
-export function agentImageSrc(url: string | null | undefined): string | null {
-  if (!url) return null;
-  if (url.startsWith("http")) return url;
-  const base = publicEnv.apiBaseUrl.replace(/\/api\/v1\/?$/, "");
-  return `${base}${url}`;
+/** Resolve agent avatar; falls back to design stock avatars when missing. */
+export function agentImageSrc(
+  url: string | null | undefined,
+  seed?: string | number,
+): string {
+  if (url) {
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/assets/")) {
+      return url;
+    }
+    const base = publicEnv.apiBaseUrl.replace(/\/api\/v1\/?$/, "");
+    return `${base}${url}`;
+  }
+  return stockAvatar(seed);
 }

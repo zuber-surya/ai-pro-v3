@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
+
 export type SearchUiFilters = {
   minPrice: string;
   maxPrice: string;
+  city: string;
   propertyTypes: string[];
   bedrooms: number | null;
   amenities: string[];
@@ -11,10 +14,13 @@ export type SearchUiFilters = {
 export const DEFAULT_SEARCH_FILTERS: SearchUiFilters = {
   minPrice: "",
   maxPrice: "",
+  city: "",
   propertyTypes: [],
   bedrooms: null,
   amenities: [],
 };
+
+const PRICE_SLIDER_MAX = 50_000_000;
 
 const PROPERTY_TYPES = ["Apartment", "Villa", "Plot", "Commercial"] as const;
 const AMENITIES = ["Pool", "Gym", "Parking", "Security", "Garden", "Balcony"] as const;
@@ -29,6 +35,8 @@ export function SearchFiltersPanel({
   onChange: (next: SearchUiFilters) => void;
   onClear: () => void;
 }) {
+  const [moreOpen, setMoreOpen] = useState(filters.amenities.length > 0);
+
   function toggleType(type: string) {
     const set = new Set(filters.propertyTypes);
     if (set.has(type)) set.delete(type);
@@ -78,6 +86,38 @@ export function SearchFiltersPanel({
               value={filters.maxPrice}
               onChange={(e) => onChange({ ...filters, maxPrice: e.target.value })}
               aria-label="Maximum price"
+            />
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={PRICE_SLIDER_MAX}
+            step={100_000}
+            value={Math.min(
+              Number(filters.maxPrice.replace(/[^\d]/g, "")) || PRICE_SLIDER_MAX,
+              PRICE_SLIDER_MAX,
+            )}
+            onChange={(e) =>
+              onChange({ ...filters, maxPrice: String(Number(e.target.value)) })
+            }
+            className="w-full accent-primary"
+            aria-label="Maximum price slider"
+          />
+        </div>
+
+        <div className="mb-lg">
+          <label className="mb-base block font-label-md text-on-surface-variant">Location</label>
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-outline">
+              location_on
+            </span>
+            <input
+              className="w-full rounded-lg border border-outline-variant py-sm pl-10 pr-3 text-body-sm outline-none focus:border-primary focus:ring-0"
+              type="text"
+              placeholder="City"
+              value={filters.city}
+              onChange={(e) => onChange({ ...filters, city: e.target.value })}
+              aria-label="Location city"
             />
           </div>
         </div>
@@ -130,22 +170,36 @@ export function SearchFiltersPanel({
           </div>
         </div>
 
-        <div>
-          <label className="mb-base block font-label-md text-on-surface-variant">Amenities</label>
-          <div className="space-y-2">
-            {AMENITIES.map((name) => (
-              <label key={name} className="flex cursor-pointer items-center gap-md">
-                <input
-                  type="checkbox"
-                  className="h-5 w-5 rounded border-outline-variant text-primary focus:ring-primary"
-                  checked={filters.amenities.includes(name)}
-                  onChange={() => toggleAmenity(name)}
-                />
-                <span className="text-body-sm">{name}</span>
-              </label>
-            ))}
+        {moreOpen ? (
+          <div className="mb-lg">
+            <label className="mb-base block font-label-md text-on-surface-variant">Amenities</label>
+            <div className="space-y-2">
+              {AMENITIES.map((name) => (
+                <label key={name} className="flex cursor-pointer items-center gap-md">
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5 rounded border-outline-variant text-primary focus:ring-primary"
+                    checked={filters.amenities.includes(name)}
+                    onChange={() => toggleAmenity(name)}
+                  />
+                  <span className="text-body-sm">{name}</span>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
+
+        <button
+          type="button"
+          className="flex w-full items-center justify-center gap-sm rounded-lg border border-outline-variant bg-surface-container-highest py-md font-label-md text-on-surface-variant transition-all hover:bg-surface-container"
+          onClick={() => setMoreOpen((v) => !v)}
+          aria-expanded={moreOpen}
+        >
+          <span className="material-symbols-outlined" aria-hidden>
+            filter_list
+          </span>
+          {moreOpen ? "Fewer Filters" : "More Filters"}
+        </button>
       </div>
     </aside>
   );

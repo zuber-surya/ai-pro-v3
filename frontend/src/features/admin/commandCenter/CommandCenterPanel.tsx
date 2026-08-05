@@ -5,12 +5,11 @@ import Link from "next/link";
 import {
   getMetricsDashboard,
   getMetricsReports,
-  propertyMediaSrc,
   agentImageSrc,
   type MetricsDashboard,
   AppError,
 } from "@/lib/api";
-import { Button, Input } from "@/components/ui";
+import { Button, Input, MediaImage } from "@/components/ui";
 import { ErrorState, Loader } from "@/components/states";
 
 function isoDaysAgo(days: number): string {
@@ -250,8 +249,6 @@ export function CommandCenterPanel() {
     [data],
   );
 
-  const featuredCover = propertyMediaSrc(data?.featuredListing?.coverImageUrl);
-
   return (
     <div className="mx-auto max-w-[1400px] space-y-xl px-xl py-xl">
       <div className="flex flex-wrap items-start justify-between gap-md">
@@ -391,20 +388,12 @@ export function CommandCenterPanel() {
                     className="group overflow-hidden rounded-xl border border-outline-variant bg-white shadow-sm"
                   >
                     <div className="relative h-48 overflow-hidden">
-                      {featuredCover ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={featuredCover}
-                          alt=""
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center bg-surface-container">
-                          <span className="material-symbols-outlined text-4xl text-on-surface-variant">
-                            apartment
-                          </span>
-                        </div>
-                      )}
+                      <MediaImage
+                        src={data.featuredListing.coverImageUrl}
+                        seed={data.featuredListing.id}
+                        alt={data.featuredListing.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
                       <div className="absolute top-4 right-4 rounded-full bg-white/90 px-3 py-1 font-label-md text-label-md text-primary backdrop-blur">
                         {formatInrCompact(Number(data.featuredListing.price))}
                       </div>
@@ -525,18 +514,26 @@ export function CommandCenterPanel() {
                             {item.body}
                           </p>
                           {item.type === "lead" ? (
-                            <div className="mt-md flex gap-md">
+                            <div className="mt-md flex flex-col gap-md">
+                              <div className="flex gap-md">
+                                <Link
+                                  href={item.href ?? "/admin/leads"}
+                                  className="font-label-sm text-label-sm text-primary hover:underline"
+                                >
+                                  View Profile
+                                </Link>
+                                <Link
+                                  href="/admin/leads"
+                                  className="font-label-sm text-label-sm text-on-surface-variant hover:underline"
+                                >
+                                  Assign Agent
+                                </Link>
+                              </div>
                               <Link
                                 href={item.href ?? "/admin/leads"}
-                                className="font-label-sm text-label-sm text-primary hover:underline"
+                                className="w-full rounded-lg bg-secondary px-md py-sm text-center font-label-md text-label-md text-sm text-on-secondary"
                               >
-                                View Profile
-                              </Link>
-                              <Link
-                                href="/admin/leads"
-                                className="font-label-sm text-label-sm text-on-surface-variant hover:underline"
-                              >
-                                Assign Agent
+                                Join Conversation
                               </Link>
                             </div>
                           ) : item.href ? (
@@ -576,19 +573,13 @@ export function CommandCenterPanel() {
                       <p className="text-body-sm text-white/60">No agent volume yet.</p>
                     ) : (
                       data.agentLeaderboard.map((agent) => {
-                        const img = agentImageSrc(agent.profileImageUrl);
+                        const img = agentImageSrc(agent.profileImageUrl, agent.id);
                         return (
                           <div key={agent.id} className="flex items-center justify-between">
                             <div className="flex items-center gap-md">
                               <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10">
-                                {img ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={img} alt="" className="h-full w-full object-cover" />
-                                ) : (
-                                  <span className="material-symbols-outlined text-sm text-white">
-                                    person
-                                  </span>
-                                )}
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={img} alt="" className="h-full w-full object-cover" />
                               </div>
                               <span className="font-label-md text-label-md text-white">
                                 {agent.name}

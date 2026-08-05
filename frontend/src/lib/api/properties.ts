@@ -1,6 +1,7 @@
 import { apiRequest } from "./client";
 import { publicEnv } from "@/lib/config/env";
 import { getAccessToken } from "@/lib/auth";
+import { stockPropertyCover } from "@/lib/media/stock";
 import { AppError, type ApiErrorEnvelope } from "@/types/api";
 
 export type PropertyStatus = "draft" | "published" | "archived" | "sold" | "rented";
@@ -146,11 +147,19 @@ export function getFeaturedProperties(params?: { page?: number; pageSize?: numbe
   return apiRequest<PaginatedProperties>(`/properties/featured${toQuery(params)}`);
 }
 
-export function propertyMediaSrc(url: string | null | undefined): string | null {
-  if (!url) return null;
-  if (url.startsWith("http")) return url;
-  const base = publicEnv.apiBaseUrl.replace(/\/api\/v1\/?$/, "");
-  return `${base}${url}`;
+/** Resolve listing media; falls back to design stock covers when missing. */
+export function propertyMediaSrc(
+  url: string | null | undefined,
+  seed?: string | number,
+): string {
+  if (url) {
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/assets/")) {
+      return url;
+    }
+    const base = publicEnv.apiBaseUrl.replace(/\/api\/v1\/?$/, "");
+    return `${base}${url}`;
+  }
+  return stockPropertyCover(seed);
 }
 
 export function createProperty(payload: PropertyCreatePayload) {

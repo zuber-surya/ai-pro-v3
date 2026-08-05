@@ -54,6 +54,7 @@ export function SaveSearchButton({
       const filterPayload: Record<string, unknown> = {};
       if (filters.minPrice.trim()) filterPayload.minPrice = filters.minPrice.trim();
       if (filters.maxPrice.trim()) filterPayload.maxPrice = filters.maxPrice.trim();
+      if (filters.city.trim()) filterPayload.city = filters.city.trim();
       if (filters.bedrooms != null) filterPayload.bedrooms = filters.bedrooms;
       if (filters.amenities.length) filterPayload.amenities = filters.amenities;
       if (filters.propertyTypes.length === 1) {

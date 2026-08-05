@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton } from "@/features/auth";
 import { NotificationsBell } from "@/features/notifications";
@@ -28,9 +28,12 @@ function navActive(pathname: string, href: string, exact?: boolean) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** SCR-CMD admin chrome — sidebar + top search bar */
+/** SCR-CMD admin chrome — sidebar + top search bar (drawer below lg) */
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "/admin";
+  const router = useRouter();
+  const [navOpen, setNavOpen] = useState(false);
+  const [adminQuery, setAdminQuery] = useState("");
   const user = getCurrentUser();
   const displayName = user?.fullName?.trim() || user?.email || "Admin";
   const roleLabel =
@@ -40,16 +43,52 @@ export function AdminShell({ children }: { children: ReactNode }) {
         ? "Agent"
         : "Admin";
 
+  useEffect(() => {
+    setNavOpen(false);
+  }, [pathname]);
+
+  function onAdminSearch(e: FormEvent) {
+    e.preventDefault();
+    const q = adminQuery.trim();
+    if (!q) return;
+    router.push(`/properties?q=${encodeURIComponent(q)}`);
+  }
+
   return (
     <div className="min-h-screen bg-surface text-on-surface">
-      <aside className="fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-outline-variant bg-surface-container-lowest px-md py-lg">
-        <div className="mb-md px-sm">
-          <h1 className="font-headline-md text-headline-md font-bold text-primary">
-            PropVista CRM
-          </h1>
-          <p className="font-label-sm text-label-sm text-on-surface-variant opacity-70">
-            Premium Admin Panel
-          </p>
+      {navOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-inverse-surface/40 lg:hidden"
+          aria-label="Close menu"
+          onClick={() => setNavOpen(false)}
+        />
+      ) : null}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-outline-variant bg-surface-container-lowest px-md py-lg transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+          navOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="mb-md flex items-start justify-between gap-sm px-sm">
+          <div>
+            <h1 className="font-headline-md text-headline-md font-bold text-primary">
+              PropVista CRM
+            </h1>
+            <p className="font-label-sm text-label-sm text-on-surface-variant opacity-70">
+              Premium Admin Panel
+            </p>
+          </div>
+          <button
+            type="button"
+            className="rounded-lg p-sm text-on-surface-variant hover:bg-surface-container-high lg:hidden"
+            aria-label="Close menu"
+            onClick={() => setNavOpen(false)}
+          >
+            <span className="material-symbols-outlined" aria-hidden>
+              close
+            </span>
+          </button>
         </div>
 
         <nav
@@ -109,35 +148,50 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="ml-72 min-h-screen">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-outline-variant bg-surface/80 px-xl shadow-sm backdrop-blur-md">
-          <div className="relative w-full max-w-md">
-            <span
-              className="material-symbols-outlined absolute top-1/2 left-3 -translate-y-1/2 text-on-surface-variant"
-              aria-hidden
-            >
-              search
-            </span>
-            <input
-              className="w-full rounded-full border border-outline-variant bg-surface-container-low py-2 pr-4 pl-10 font-body-sm text-body-sm outline-none focus:border-transparent focus:ring-2 focus:ring-primary"
-              placeholder="Search leads, properties, or tasks..."
-              type="search"
-              aria-label="Search leads, properties, or tasks"
-            />
-          </div>
-          <div className="flex items-center gap-md">
-            <NotificationsBell />
+      <div className="min-h-screen lg:ml-72">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-md border-b border-outline-variant bg-surface/80 px-md shadow-sm backdrop-blur-md lg:px-xl">
+          <div className="flex min-w-0 flex-1 items-center gap-md">
             <button
               type="button"
-              className="rounded-full p-2 text-on-surface-variant transition-all hover:bg-surface-container-low"
+              className="rounded-lg p-sm text-on-surface-variant hover:bg-surface-container-low lg:hidden"
+              aria-label="Open menu"
+              aria-expanded={navOpen}
+              onClick={() => setNavOpen(true)}
+            >
+              <span className="material-symbols-outlined" aria-hidden>
+                menu
+              </span>
+            </button>
+            <form className="relative w-full max-w-md" onSubmit={onAdminSearch}>
+              <span
+                className="material-symbols-outlined absolute top-1/2 left-3 -translate-y-1/2 text-on-surface-variant"
+                aria-hidden
+              >
+                search
+              </span>
+              <input
+                className="w-full rounded-full border border-outline-variant bg-surface-container-low py-2 pr-4 pl-10 font-body-sm text-body-sm outline-none focus:border-transparent focus:ring-2 focus:ring-primary"
+                placeholder="Search leads, properties, or tasks..."
+                type="search"
+                aria-label="Search leads, properties, or tasks"
+                value={adminQuery}
+                onChange={(e) => setAdminQuery(e.target.value)}
+              />
+            </form>
+          </div>
+          <div className="flex shrink-0 items-center gap-md">
+            <NotificationsBell />
+            <Link
+              href="/pages/privacy"
+              className="hidden rounded-full p-2 text-on-surface-variant transition-all hover:bg-surface-container-low sm:inline-flex"
               aria-label="Help"
               title="Help"
             >
               <span className="material-symbols-outlined" aria-hidden>
                 help
               </span>
-            </button>
-            <div className="mx-2 h-8 w-px bg-outline-variant" />
+            </Link>
+            <div className="mx-2 hidden h-8 w-px bg-outline-variant sm:block" />
             <span
               className="material-symbols-outlined text-[32px] text-on-surface-variant"
               aria-hidden

@@ -67,6 +67,9 @@ export function searchSuggest(q: string) {
   );
 }
 
-export function searchThumbSrc(url: string | null | undefined): string | null {
-  return propertyMediaSrc(url);
+export function searchThumbSrc(
+  url: string | null | undefined,
+  seed?: string | number,
+): string {
+  return propertyMediaSrc(url, seed);
 }

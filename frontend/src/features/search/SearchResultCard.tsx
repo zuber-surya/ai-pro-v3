@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import type { MouseEvent } from "react";
-import { searchThumbSrc, type AiSearchResultItem } from "@/lib/api";
+import type { AiSearchResultItem } from "@/lib/api";
+import { MediaImage } from "@/components/ui";
 import { useFavoriteToggle } from "@/features/favorites";
 
 function formatPrice(amount: string, currency: string) {
@@ -29,7 +30,6 @@ export function SearchResultCard({
   /** Hide match % / reasons in filter-fallback mode (SCR-SEARCH-FB). */
   showMatch?: boolean;
 }) {
-  const thumb = searchThumbSrc(item.thumbnailUrl);
   const reasons = showMatch ? (item.matchReasons?.slice(0, 3) ?? []) : [];
   const score = showMatch ? item.matchScorePercent : null;
   const { favorited, busy, toggle } = useFavoriteToggle(
@@ -50,20 +50,12 @@ export function SearchResultCard({
         className="group flex flex-col overflow-hidden rounded-xl border border-transparent bg-surface-container-lowest shadow-level-1 transition-all duration-300 hover:border-primary/20 sm:flex-row"
       >
         <div className="relative h-48 w-full flex-shrink-0 overflow-hidden sm:h-auto sm:w-64">
-          {thumb ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={thumb}
-              alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full min-h-48 items-center justify-center bg-surface-container-high text-on-surface-variant">
-              <span className="material-symbols-outlined text-4xl" aria-hidden>
-                image
-              </span>
-            </div>
-          )}
+          <MediaImage
+            src={item.thumbnailUrl}
+            seed={item.propertyId}
+            alt={item.title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
           {score != null ? (
             <div className="absolute bottom-md left-md flex items-center gap-xs rounded-full bg-secondary/90 px-3 py-1 text-label-sm text-white backdrop-blur-sm">
               <span className="material-symbols-outlined text-[14px]" aria-hidden>
@@ -152,20 +144,12 @@ export function SearchResultCard({
       className="group flex flex-col overflow-hidden rounded-xl border border-transparent bg-surface-container-lowest shadow-level-1 transition-all duration-300 hover:border-primary/20"
     >
       <div className="relative h-56 w-full overflow-hidden">
-        {thumb ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={thumb}
-            alt=""
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-surface-container-high text-on-surface-variant">
-            <span className="material-symbols-outlined text-4xl" aria-hidden>
-              image
-            </span>
-          </div>
-        )}
+        <MediaImage
+          src={item.thumbnailUrl}
+          seed={item.propertyId}
+          alt={item.title}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
         <div className="absolute right-md top-md">
           <button
             type="button"

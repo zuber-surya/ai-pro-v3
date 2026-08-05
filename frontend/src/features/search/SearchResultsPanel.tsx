@@ -24,6 +24,7 @@ function toApiFilters(ui: SearchUiFilters): AiSearchFilters {
   const filters: AiSearchFilters = {};
   if (ui.minPrice.trim()) filters.minPrice = ui.minPrice.trim();
   if (ui.maxPrice.trim()) filters.maxPrice = ui.maxPrice.trim();
+  if (ui.city.trim()) filters.city = ui.city.trim();
   if (ui.bedrooms != null) filters.bedrooms = ui.bedrooms;
   if (ui.amenities.length) filters.amenities = ui.amenities;
   if (ui.propertyTypes.length === 1) filters.propertyType = ui.propertyTypes[0];
@@ -36,6 +37,9 @@ function parsePriceSort(results: AiSearchResponse["results"], sort: string) {
     copy.sort((a, b) => Number(a.priceAmount) - Number(b.priceAmount));
   } else if (sort === "price_desc") {
     copy.sort((a, b) => Number(b.priceAmount) - Number(a.priceAmount));
+  } else if (sort === "newest") {
+    // API order is already newest-first for listing fallback; AI results keep server order.
+    return copy;
   }
   return copy;
 }
@@ -296,6 +300,7 @@ export function SearchResultsPanel() {
                 <option value="relevance">Relevance</option>
                 <option value="price_asc">Price: Low to High</option>
                 <option value="price_desc">Price: High to Low</option>
+                <option value="newest">Newest Listed</option>
               </select>
               <span className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant">
                 expand_more

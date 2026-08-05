@@ -136,16 +136,12 @@ export function AgentsAdminPanel() {
             </thead>
             <tbody>
               {rows.map((a) => {
-                const src = agentImageSrc(a.profileImageUrl);
+                const src = agentImageSrc(a.profileImageUrl, a.id);
                 return (
                   <tr key={a.id} className="border-b border-outline-variant last:border-0">
                     <td className="px-md py-sm">
-                      {src ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={src} alt="" className="h-10 w-10 rounded-full object-cover" />
-                      ) : (
-                        <span className="text-on-surface-variant">—</span>
-                      )}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={src} alt="" className="h-10 w-10 rounded-full object-cover" />
                     </td>
                     <td className="px-md py-sm">{a.name}</td>
                     <td className="px-md py-sm">{a.email}</td>

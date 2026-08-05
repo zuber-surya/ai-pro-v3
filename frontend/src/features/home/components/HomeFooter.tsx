@@ -83,7 +83,12 @@ export function HomeFooter() {
               </Link>
             </li>
             <li>
-              <span className="font-body-sm text-on-surface-variant underline">Cookie Policy</span>
+              <Link
+                href="/pages/privacy"
+                className="font-body-sm text-on-surface-variant underline transition-colors hover:text-on-surface"
+              >
+                Cookie Policy
+              </Link>
             </li>
           </ul>
         </div>

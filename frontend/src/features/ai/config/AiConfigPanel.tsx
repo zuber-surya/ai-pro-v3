@@ -442,6 +442,20 @@ export function AiConfigPanel() {
                 <p className="font-label-md font-bold">PropVista AI</p>
                 <p className="text-[10px] opacity-80">Always Online</p>
               </div>
+              <button
+                type="button"
+                className="ml-auto opacity-60 hover:opacity-100"
+                aria-label="Reset preview chat"
+                onClick={() => {
+                  setPreviewMessages([{ role: "assistant", text: greeting || "Hello!" }]);
+                  setPreviewPrompt("");
+                  setPreviewError(null);
+                }}
+              >
+                <span className="material-symbols-outlined" aria-hidden>
+                  close
+                </span>
+              </button>
             </div>
             <div className="flex-1 space-y-md overflow-y-auto bg-[#F9FAFB] p-md">
               {previewMessages.map((m, i) =>

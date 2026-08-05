@@ -2,11 +2,8 @@
 
 import { useEffect, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import {
-  getFeaturedProperties,
-  propertyMediaSrc,
-  type Property,
-} from "@/lib/api";
+import { getFeaturedProperties, type Property } from "@/lib/api";
+import { MediaImage } from "@/components/ui";
 import { EmptyState, ErrorState, Loader } from "@/components/states";
 import { useFavoriteToggle } from "@/features/favorites";
 
@@ -28,7 +25,6 @@ function formatPrice(amount: string, currency: string) {
 }
 
 function FeaturedCard({ property, matchScore }: { property: Property; matchScore: number }) {
-  const cover = propertyMediaSrc(property.coverImageUrl);
   const location = [property.address.city, property.address.region]
     .filter(Boolean)
     .join(", ");
@@ -49,20 +45,12 @@ function FeaturedCard({ property, matchScore }: { property: Property; matchScore
       className="group min-w-[320px] overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="relative h-64">
-        {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={cover}
-            alt={property.title}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-surface-container text-on-surface-variant">
-            <span className="material-symbols-outlined text-4xl" aria-hidden>
-              apartment
-            </span>
-          </div>
-        )}
+        <MediaImage
+          src={property.coverImageUrl}
+          seed={property.id}
+          alt={property.title}
+          className="h-full w-full object-cover"
+        />
         <button
           type="button"
           aria-label={favorited ? "Remove favorite" : "Save favorite"}

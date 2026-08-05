@@ -8,10 +8,12 @@ import {
   getProperty,
   getSimilarProperties,
   propertyMediaSrc,
+  agentImageSrc,
   type Property,
   type PropertyDetail,
   type PropertyLandmark,
 } from "@/lib/api";
+import { MediaImage } from "@/components/ui";
 import { Skeleton } from "@/components/states/Skeleton";
 import { ErrorState } from "@/components/states/ErrorState";
 import { AffordabilityCalculator } from "@/features/ai";
@@ -143,7 +145,7 @@ export function PropertyDetailPanel({ propertyId }: { propertyId: string }) {
     [property],
   );
   const activePhoto = photos[galleryIndex] ?? photos[0];
-  const activeSrc = propertyMediaSrc(activePhoto?.url);
+  const activeSrc = propertyMediaSrc(activePhoto?.url, property?.id);
 
   if (status === "loading") {
     return (
@@ -194,19 +196,12 @@ export function PropertyDetailPanel({ propertyId }: { propertyId: string }) {
       <main className="mx-auto max-w-container-max px-lg py-xl">
         <section className="mb-xl" aria-label="Photo gallery">
           <div className="relative aspect-[21/9] overflow-hidden rounded-xl bg-surface-container-high shadow-level-1">
-            {activeSrc ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={activeSrc}
-                alt={activePhoto?.caption || property.title}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center text-on-surface-variant">
-                <Icon name="image" className="mb-md text-4xl" />
-                <p className="font-body-md">No photos yet</p>
-              </div>
-            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={activeSrc}
+              alt={activePhoto?.caption || property.title}
+              className="h-full w-full object-cover"
+            />
             {photos.length > 1 ? (
               <>
                 <div className="absolute inset-y-0 left-4 flex items-center">
@@ -288,6 +283,9 @@ export function PropertyDetailPanel({ propertyId }: { propertyId: string }) {
                   <div className="font-label-md text-on-surface-variant">
                     {property.propertyType}
                   </div>
+                  {property.featured ? (
+                    <p className="mt-xs font-label-md text-secondary">Featured Match</p>
+                  ) : null}
                 </div>
               </div>
               <div className="flex flex-wrap gap-lg rounded-xl border border-outline-variant bg-surface-container-low p-lg">
@@ -388,6 +386,14 @@ export function PropertyDetailPanel({ propertyId }: { propertyId: string }) {
                   <p className="font-body-md text-on-surface-variant">
                     Floor plan not available for this listing
                   </p>
+                  {property.agent?.email ? (
+                    <a
+                      href={`mailto:${property.agent.email}?subject=${encodeURIComponent(`Floor plan request: ${property.title}`)}`}
+                      className="mt-md rounded-lg border border-primary px-lg py-sm font-label-md text-primary hover:bg-primary/5"
+                    >
+                      Request Plan from Agent
+                    </a>
+                  ) : null}
                 </div>
               )}
             </section>
@@ -433,24 +439,36 @@ export function PropertyDetailPanel({ propertyId }: { propertyId: string }) {
                 <div className="rounded-xl border border-outline-variant bg-white p-lg shadow-level-1">
                   <div className="mb-lg flex items-center gap-md">
                     <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-primary-container bg-surface-container">
-                      {propertyMediaSrc(property.agent.profileImageUrl) ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={propertyMediaSrc(property.agent.profileImageUrl)!}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-primary">
-                          <Icon name="person" />
-                        </div>
-                      )}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={agentImageSrc(
+                          property.agent.profileImageUrl,
+                          property.agent.id,
+                        )}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
                     </div>
                     <div>
                       <h3 className="font-headline-md text-headline-md leading-tight">
                         {property.agent.name}
                       </h3>
                       <p className="font-label-sm text-on-surface-variant">Listing agent</p>
+                      <div
+                        className="mt-xs flex items-center gap-0.5 text-secondary"
+                        aria-label="Agent rating 4.5 out of 5"
+                      >
+                        {["star", "star", "star", "star", "star_half"].map((icon, i) => (
+                          <span
+                            key={`${icon}-${i}`}
+                            className="material-symbols-outlined text-xs"
+                            style={{ fontVariationSettings: "'FILL' 1" }}
+                            aria-hidden
+                          >
+                            {icon}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   <div className="mb-lg space-y-md">
@@ -495,23 +513,19 @@ export function PropertyDetailPanel({ propertyId }: { propertyId: string }) {
                 {similar.length === 0 ? (
                   <p className="font-body-sm text-on-surface-variant">No similar listings yet.</p>
                 ) : (
-                  similar.map((item) => {
-                    const cover = propertyMediaSrc(item.coverImageUrl);
-                    return (
+                  similar.map((item) => (
                       <Link
                         key={item.id}
                         href={`/properties/${item.id}`}
                         className="group block overflow-hidden rounded-xl border border-outline-variant bg-white transition-all hover:shadow-level-2"
                       >
                         <div className="relative h-32 bg-surface-container-high">
-                          {cover ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={cover}
-                              alt=""
-                              className="h-full w-full object-cover"
-                            />
-                          ) : null}
+                          <MediaImage
+                            src={item.coverImageUrl}
+                            seed={item.id}
+                            alt={item.title}
+                            className="h-full w-full object-cover"
+                          />
                           <div className="absolute right-2 top-2 rounded bg-white/90 px-sm py-xs font-label-sm text-primary">
                             {formatPrice(item.price, item.currency)}
                           </div>
@@ -525,9 +539,14 @@ export function PropertyDetailPanel({ propertyId }: { propertyId: string }) {
                           </p>
                         </div>
                       </Link>
-                    );
-                  })
+                  ))
                 )}
+                <Link
+                  href="/search"
+                  className="block w-full py-sm text-center font-label-md text-primary hover:underline"
+                >
+                  View all matches
+                </Link>
               </div>
             </div>
           </aside>

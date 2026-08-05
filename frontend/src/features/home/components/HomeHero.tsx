@@ -64,7 +64,7 @@ export function HomeHero({ cms }: { cms?: HomepageHeroCms }) {
         >
           <div className="pl-md text-ai-accent">
             <span className="material-symbols-outlined" aria-hidden>
-              location_on
+              psychology
             </span>
           </div>
           <input

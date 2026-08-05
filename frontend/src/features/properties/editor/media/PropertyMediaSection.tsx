@@ -13,7 +13,9 @@ import {
 import { AppError } from "@/types/api";
 
 function mediaSrc(url: string): string {
-  if (url.startsWith("http")) return url;
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/assets/")) {
+    return url;
+  }
   const base = publicEnv.apiBaseUrl.replace(/\/api\/v1\/?$/, "");
   return `${base}${url}`;
 }

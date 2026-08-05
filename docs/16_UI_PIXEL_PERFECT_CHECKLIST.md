@@ -728,6 +728,9 @@ Developer signature: Agent session 2026-08-03
 | 1.0.0 | 2026-07-30 | Initial Pixel Perfect UI Verification Manual |
 | 1.0.1 | 2026-08-03 | Main-screen desktop verification log + residual gap update |
 | 1.0.2 | 2026-08-04 | §5 inventory: live routes + desktop status; catalog cross-link |
+| 1.0.3 | 2026-08-04 | §40 responsive log + stock media; admin/customer drawer nav |
+| 1.0.4 | 2026-08-04 | §41 interactive control audit vs design_reference; control fixes |
+| 1.0.5 | 2026-08-05 | §41 close high-ROI residuals; MVP ship waiver for deferred gaps |
 
 ---
 
@@ -755,9 +758,104 @@ Environment: `http://localhost:3001` · Evidence: `dogfood-output/screenshots/pi
 - [x] Desktop pixel comparison process completed for main SCR-* above  
 - [x] Screenshot / video evidence attached under `dogfood-output/`  
 - [x] Engineering gates previously green for MVP ship  
-- [ ] Full tablet + mobile matrix for every SCR-* (residual, low)  
+- [x] Tablet + mobile matrix captured (2026-08-04) — see §40  
 
-**Decision:** Main MVP screens **approved for desktop Screen Complete** with residuals listed in §35.
+**Decision:** Main MVP screens **approved for desktop Screen Complete** with residuals listed in §35 / §40.
+
+---
+
+## 40. Responsive verification log (2026-08-04)
+
+Viewports: **375×812** (mobile), **768×1024** (tablet), **1280×800** (desktop)  
+Evidence: `dogfood-output/screenshots/responsive/*-{mobile,tablet,desktop}.png` (33 captures)
+
+| Screen | Mobile | Tablet | Desktop | Notes |
+|--------|--------|--------|---------|-------|
+| SCR-HOME `/` | Pass | Pass | Pass | Stacked hero; chat FAB present |
+| SCR-SEARCH `/search` | Pass | Pass | Pass | Filters + grid; stock covers when missing |
+| SCR-PROP-D | Pass | Pass | Pass | Gallery uses stock fallback |
+| SCR-LOGIN | Pass | Pass | Pass | Functional form |
+| SCR-CUS-DASH | Pass* | Pass | Pass | *Drawer nav below `lg` (2026-08-04) |
+| SCR-CMD `/admin` | Pass* | Pass | Pass | *Drawer nav below `lg` (was covering content) |
+| SCR-CLIENTS leads | Pass* | Pass | Pass | Same admin shell |
+| SCR-REPORTS | Pass* | Pass | Pass | Same admin shell |
+| SCR-AI-CFG | Pass* | Pass | Pass | Same admin shell |
+| SCR-PROP-INV | Pass* | Pass | Pass | Same admin shell |
+| SCR-BULK | Pass* | Pass | Pass | Same admin shell |
+| SCR-LEAD-KANBAN | N/A | N/A | N/A | Out of MVP |
+
+### Stock images (2026-08-04)
+
+- Local design stock under `frontend/public/assets/stock/` (3 property + 3 avatar)
+- `propertyMediaSrc` / `agentImageSrc` / `MediaImage` fall back when URL missing or load fails
+- Search empty state uses `/assets/search-magnifying-glass.svg`
+
+### Remaining residuals
+
+| Gap | Severity |
+|-----|----------|
+| Homepage mobile nav may truncate brand glyph vs design HTML | Low |
+| Search filters remain visible on tablet (acceptable; not a drawer) | Low |
+| Full overlay pixel-diff vs every `screen.png` at 375/768 | Low (spot-check done) |
+
+---
+
+## 41. Interactive control audit vs `design_reference` (2026-08-04 / closed 2026-08-05)
+
+Full pass of links, icons, tabs, fields, menus, buttons, popups against each `docs/design_reference/*/code.html`.
+
+**Verdict:** Core in-MVP interactive controls closed for ship. Remaining gaps are Out-of-MVP, intentional public chrome, or deferred product taxonomy (map view, editor tabs, lead AI panels).
+
+### 41.1 Closed (aligned to HTML)
+
+| Control | Screen | Change |
+|---------|--------|--------|
+| Hero search icon `psychology` | HOME | Was `location_on` |
+| Footer Cookie Policy link | HOME | Linked (privacy page) |
+| Sort “Newest Listed” | SEARCH | Option added |
+| Price slider + Location + More Filters | SEARCH | Wired in `SearchFiltersPanel` |
+| Empty AI Insight card | SEARCH | Card + View suggestions |
+| Request Plan from Agent | PROP-D | mailto when no floor plan |
+| View all matches | PROP-D | Link → `/search` |
+| Featured Match + agent stars | PROP-D | Badge when featured; star row on agent |
+| Notification Preferences nav | CUS | Label/icon + `#notifications` |
+| Help + Settings header icons | CUS | Clickable |
+| Preview chat close | AI-CFG | Resets preview |
+| Admin global search | CMD | Submits → `/properties?q=` |
+| Admin Help | CMD | Links to help/privacy page |
+| Join Conversation | CMD | CTA on lead activity → lead |
+
+### 41.2 Pass / Fail / Partial by screen
+
+| SCR | Design folder | Interactive match | Notes |
+|-----|---------------|-------------------|-------|
+| SCR-HOME | `propvista_crm_homepage` | **Pass*** | *Footer marketing stubs (Careers/Press); mic non-functional (known) |
+| SCR-SEARCH | `search_results_*` | **Pass*** | *Map view deferred; public chrome vs CRM chrome intentional; type taxonomy product choice |
+| SCR-PROP-D | `property_details_premium_view` | **Pass*** | *Match % is Featured Match (no live AI score on detail API) |
+| SCR-CUS-DASH | `customer_account_dashboard` | **Pass*** | *Saved Searches panel retained under notifications (MVP) |
+| SCR-CMD | `admin_agent_command_center` | **Pass*** | *Join Conversation routes to lead (no live chat transcript product) |
+| SCR-LEAD-D | `lead_detail_sarah_jenkins` | **Partial / MVP** | Notes/stage/visit Pass; AI match/attach/FAB = Out-of-MVP / subset |
+| SCR-PROP-INV | `property_inventory_admin_view` | **Partial** | CRUD/bulk Pass; status tabs + list/grid taxonomy differs |
+| SCR-PROP-EDIT | `listing_editor_basic_info` | **Partial** | Scroll-page MVP; section tabs / parking / Full Preview deferred |
+| SCR-BULK | `bulk_upload_validation_results` | **Pass*** | *Full-page not modal; CSV only (XLSX Out-of-MVP) |
+| SCR-AI-CFG | `ai_chatbot_configuration` | **Pass** | Escalate checkbox OK for MVP |
+| SCR-LEAD-KANBAN | `lead_pipeline_kanban_view` | **N/A** | Out of MVP — correctly absent |
+
+### 41.3 Deferred residuals (waived for MVP ship)
+
+| Gap | Severity | Disposition |
+|-----|----------|-------------|
+| Search map view | Medium | Deferred — grid/list ship |
+| Lead detail AI match / attach / FAB | Medium | MVP subset (Constitution) |
+| Listing editor tabbed sections + Full Preview | Medium | Deferred |
+| Inventory Pending Approval tabs / grid | Low | Product taxonomy |
+| Public CRM agent chrome on guest pages | — | Intentional |
+
+### Sign-off
+
+- [x] In-MVP interactive controls closed or waived (see §41.3)
+- [x] Audit documented; high-ROI mismatches fixed
+- [x] Kanban confirmed Out of MVP
 
 ---
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { LogoutButton } from "@/features/auth";
 import { NotificationsBell } from "@/features/notifications";
 
@@ -17,10 +17,10 @@ const NAV = [
   },
   { href: "/customer#inquiries", label: "Inquiry History", icon: "history", hash: "inquiries" },
   {
-    href: "/customer#saved-searches",
-    label: "Saved Searches",
-    icon: "bookmark",
-    hash: "saved-searches",
+    href: "/customer#notifications",
+    label: "Notification Preferences",
+    icon: "notifications",
+    hash: "notifications",
   },
 ] as const;
 
@@ -32,15 +32,45 @@ export function CustomerShell({
   welcomeName?: string;
 }) {
   const pathname = usePathname();
+  const [navOpen, setNavOpen] = useState(false);
+
+  useEffect(() => {
+    setNavOpen(false);
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-on-surface">
-      <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-outline-variant bg-surface py-xl">
-        <div className="mb-xl px-lg">
-          <Link href="/" className="font-headline-md text-headline-md font-bold text-primary">
-            PropVista CRM
-          </Link>
-          <p className="font-label-sm text-on-surface-variant">Customer Portal</p>
+      {navOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-inverse-surface/40 lg:hidden"
+          aria-label="Close menu"
+          onClick={() => setNavOpen(false)}
+        />
+      ) : null}
+
+      <aside
+        className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-outline-variant bg-surface py-xl transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+          navOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="mb-xl flex items-start justify-between gap-sm px-lg">
+          <div>
+            <Link href="/" className="font-headline-md text-headline-md font-bold text-primary">
+              PropVista CRM
+            </Link>
+            <p className="font-label-sm text-on-surface-variant">Customer Portal</p>
+          </div>
+          <button
+            type="button"
+            className="rounded-lg p-sm text-on-surface-variant hover:bg-surface-container-high lg:hidden"
+            aria-label="Close menu"
+            onClick={() => setNavOpen(false)}
+          >
+            <span className="material-symbols-outlined" aria-hidden>
+              close
+            </span>
+          </button>
         </div>
         <nav className="flex-1 space-y-1" aria-label="Customer">
           {NAV.map((item) => {
@@ -55,6 +85,7 @@ export function CustomerShell({
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setNavOpen(false)}
                 className={`${base} ${item.href === "/customer" && !item.hash ? (pathname === "/customer" ? activeCls : idleCls) : idleCls}`}
               >
                 <span className="material-symbols-outlined" aria-hidden>
@@ -80,22 +111,50 @@ export function CustomerShell({
         </div>
       </aside>
 
-      <div className="ml-64 min-h-screen">
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-surface-container-lowest px-lg shadow-sm">
-          <h2 className="font-headline-md text-headline-md font-bold text-primary">
-            Welcome back{welcomeName ? `, ${welcomeName}` : ""}
-          </h2>
-          <div className="flex items-center gap-lg">
+      <div className="min-h-screen lg:ml-64">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-md bg-surface-container-lowest px-md shadow-sm lg:px-lg">
+          <div className="flex min-w-0 items-center gap-md">
+            <button
+              type="button"
+              className="rounded-lg p-sm text-on-surface-variant hover:bg-surface-container-high lg:hidden"
+              aria-label="Open menu"
+              aria-expanded={navOpen}
+              onClick={() => setNavOpen(true)}
+            >
+              <span className="material-symbols-outlined" aria-hidden>
+                menu
+              </span>
+            </button>
+            <h2 className="truncate font-headline-md text-headline-md font-bold text-primary">
+              Welcome back{welcomeName ? `, ${welcomeName}` : ""}
+            </h2>
+          </div>
+          <div className="flex items-center gap-md lg:gap-lg">
             <NotificationsBell />
-            <span className="material-symbols-outlined text-on-surface-variant" aria-hidden>
-              help
-            </span>
+            <Link
+              href="/#contact"
+              className="hidden rounded-full p-2 text-on-surface-variant transition-all hover:bg-surface-container-high sm:inline-flex"
+              aria-label="Help"
+            >
+              <span className="material-symbols-outlined" aria-hidden>
+                help
+              </span>
+            </Link>
+            <Link
+              href="/customer#requirements"
+              className="hidden rounded-full p-2 text-on-surface-variant transition-all hover:bg-surface-container-high sm:inline-flex"
+              aria-label="Settings"
+            >
+              <span className="material-symbols-outlined" aria-hidden>
+                settings
+              </span>
+            </Link>
             <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary-container bg-surface-container font-label-md text-primary">
               {(welcomeName || "C").slice(0, 1).toUpperCase()}
             </div>
           </div>
         </header>
-        <div className="mx-auto max-w-7xl space-y-lg p-lg">{children}</div>
+        <div className="mx-auto max-w-7xl space-y-lg p-md lg:p-lg">{children}</div>
       </div>
     </div>
   );
