@@ -54,6 +54,9 @@ npm run build
 3. `docs/design_reference/**` (HTML wins UI)
 4. `docs/openapi.yaml`
 
+**Business overview (non-technical):** `docs/BUSINESS_REQUIREMENTS_DOCUMENT.md`  
+**Team / technical overview:** `docs/REQUIREMENTS_DOCUMENTATION.md`
+
 Gemini only. Email + in-app notifications only. Five roles. No Kanban / SMS / WhatsApp / push in MVP.
 
 ## AI assistants

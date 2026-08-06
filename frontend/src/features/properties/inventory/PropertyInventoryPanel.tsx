@@ -209,39 +209,7 @@ export function PropertyInventoryPanel() {
   }
 
   return (
-    <div className="flex min-h-screen bg-surface-container-low">
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-outline-variant bg-surface px-md py-xl md:flex">
-        <div className="mb-xl px-sm">
-          <h1 className="font-headline-lg text-headline-lg font-black tracking-tight text-primary">
-            PropVista
-          </h1>
-          <p className="mt-xs font-label-md text-label-md uppercase tracking-widest text-on-surface-variant opacity-70">
-            Admin Console
-          </p>
-        </div>
-        <nav className="flex flex-col gap-1">
-          <Link
-            href="/properties"
-            className="flex items-center gap-md rounded-lg bg-primary-container px-md py-sm font-label-md text-on-primary-container"
-          >
-            Properties
-          </Link>
-          <Link
-            href="/admin/users"
-            className="rounded-lg px-md py-sm font-label-md text-on-surface-variant hover:bg-surface-container-high"
-          >
-            Users
-          </Link>
-          <Link
-            href="/admin/agents"
-            className="rounded-lg px-md py-sm font-label-md text-on-surface-variant hover:bg-surface-container-high"
-          >
-            Agents
-          </Link>
-        </nav>
-      </aside>
-
-      <div className="flex min-w-0 flex-1 flex-col">
+    <div className="flex min-h-full flex-col bg-surface-container-low">
         <header className="flex h-16 items-center justify-between gap-md border-b border-outline-variant bg-surface-container-lowest px-lg">
           <div className="relative max-w-xl flex-1">
             <form
@@ -525,7 +493,6 @@ export function PropertyInventoryPanel() {
             </div>
           ) : null}
         </div>
-      </div>
 
       <Modal
         open={createOpen}

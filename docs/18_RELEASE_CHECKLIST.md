@@ -481,7 +481,7 @@ Release may proceed only if:
 ```markdown
 # Release Packet — v0.1.0-rc
 
-**SHA:** `eefefc4a4b5d756063c980d2b3d971b7a291c29f`
+**SHA:** `183409bcb6b299318f309a0bd606fde55564bb2d`
 **Tag:** v0.1.0-rc (pending)
 **Window:** Staging first
 **RM / TL / QA / PO:** Eng prep / pending / pending / pending
